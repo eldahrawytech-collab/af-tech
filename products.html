@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AF-Tech | المنتجات</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span>AF</span>-Tech</a>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
+    <button class="menu-btn" id="menuBtn">☰</button>
+  </div>
+  <nav id="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html" class="active">المنتجات</a>
+    <a href="community.html">المنتدى</a>
+    <a href="chat.html">المحادثات 💬</a>
+  </nav>
+</header>
+
+<main class="section">
+  <div class="section-head">
+    <p class="eyebrow">المتجر الكامل</p>
+    <h2>جميع المنتجات والأقسام</h2>
+  </div>
+
+  <div class="filters" id="productFilters">
+    <button class="filter active" data-cat="all">الكل</button>
+    <button class="filter" data-cat="receivers">ريسيفرات</button>
+    <button class="filter" data-cat="dish">مستلزمات الدش</button>
+    <button class="filter" data-cat="electrical">أجهزة كهربائية</button>
+    <button class="filter" data-cat="pos">سيستم حسابات</button>
+    <button class="filter" data-cat="printers">برنتر</button>
+    <button class="filter" data-cat="computers">كمبيوتر</button>
+    <button class="filter" data-cat="cameras">كاميرات</button>
+    <button class="filter" data-cat="screens">شاشات</button>
+    <button class="filter" data-cat="cables">كابلات</button>
+  </div>
+
+  <!-- خانة البحث في المنتجات (بالاسم، الوصف، السعر) -->
+  <div style="margin: 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+    <input type="text" id="productSearchInput" placeholder="🔍 ابحث بالاسم، الوصف، أو السعر..." oninput="filterProductsSearch()" style="width: 100%; padding: 12px; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+  </div>
+
+  <div class="products" id="productsGrid"></div>
+</main>
+
+<div id="toast"></div>
+<footer>Under the management of Eng. Ahmed El Dahrawy</footer>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if(typeof renderProducts === 'function') renderProducts();
+  });
+</script>
+</body>
+</html>

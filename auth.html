@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول برقم الموبايل | AF-Tech</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #050c14; color: #fff; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 20px; }
+    .header { width: 100%; text-align: center; padding: 20px 0; }
+    .header h1 { color: #20a4ff; font-size: 28px; letter-spacing: 1px; }
+    
+    .auth-card { background: #0b1928; border: 1px solid #1a2d42; border-radius: 16px; width: 100%; max-width: 400px; padding: 30px 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    
+    .tabs { display: flex; background: #050c14; border-radius: 10px; padding: 4px; margin-bottom: 25px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #8fa7ba; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+    .tab-btn.active { background: #20a4ff; color: #fff; }
+    
+    .form-title { text-align: center; margin-bottom: 20px; font-size: 20px; color: #e1eef9; }
+    .input-group { margin-bottom: 15px; }
+    .input-group input { width: 100%; padding: 14px; background: #050c14; border: 1px solid #1a2d42; border-radius: 10px; color: #fff; font-size: 15px; outline: none; transition: 0.3s; text-align: right; }
+    .input-group input:focus { border-color: #20a4ff; }
+    
+    .btn-submit { width: 100%; padding: 14px; background: #20a4ff; border: none; border-radius: 10px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+    .btn-submit:hover { background: #1182d3; }
+    
+    #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #20a4ff; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-align: center; }
+    .footer { text-align: center; color: #5a738e; font-size: 13px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>AF-Tech</h1>
+  </div>
+
+  <div class="auth-card">
+    <div class="tabs">
+      <button class="tab-btn active" id="tabLogin" onclick="switchAuthTab('login')">تسجيل الدخول</button>
+      <button class="tab-btn" id="tabRegister" onclick="switchAuthTab('register')">حساب جديد</button>
+    </div>
+
+    <!-- نموذج تسجيل الدخول -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <h2 class="form-title">تسجيل الدخول</h2>
+      <div class="input-group">
+        <input type="tel" id="loginPhone" placeholder="رقم الموبايل (مثال: 01012345678)" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
+      </div>
+      <button type="submit" class="btn-submit">دخول</button>
+    </form>
+
+    <!-- نموذج حساب جديد -->
+    <form id="registerForm" onsubmit="handleSignUp(event)" style="display: none;">
+      <h2 class="form-title">إنشاء حساب جديد</h2>
+      <div class="input-group">
+        <input type="text" id="regFullName" placeholder="الاسم بالكامل" required>
+      </div>
+      <div class="input-group">
+        <input type="tel" id="regPhone" placeholder="رقم الموبايل (مثال: 01012345678)" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="regPassword" placeholder="كلمة المرور" required>
+      </div>
+      <button type="submit" class="btn-submit">إنشاء الحساب</button>
+    </form>
+  </div>
+
+  <div class="footer">
+    Under the management of Eng. Ahmed El Dahrawy
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- مكتبة Supabase وملف الـ JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>

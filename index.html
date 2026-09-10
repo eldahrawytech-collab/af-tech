@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AF-Tech | الرئيسية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    /* تنسيقات شاشة الترحيب (Splash Screen) */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background-color: #050c14;
+      background-image: radial-gradient(circle at center, #102b43 0%, #050c14 70%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .splash-container {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .logo-box {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 25px auto;
+      border: 2px dashed rgba(32, 164, 255, 0.4);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: rotateCircuit 15s linear infinite;
+    }
+
+    .logo-inner {
+      position: absolute;
+      width: 85px;
+      height: 85px;
+      background: #0b1928;
+      border: 2px solid #20a4ff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(32, 164, 255, 0.4);
+    }
+
+    .logo-symbol {
+      font-size: 32px;
+      color: #20a4ff;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .splash-container h1 {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .splash-container h1 span {
+      color: #20a4ff;
+    }
+
+    .splash-container p {
+      color: #8fa7ba;
+      font-size: 15px;
+      margin-bottom: 30px;
+    }
+
+    .loader-bar {
+      width: 220px;
+      height: 4px;
+      background: #102b43;
+      border-radius: 4px;
+      margin: 0 auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .loader-progress {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: #20a4ff;
+      box-shadow: 0 0 10px #20a4ff;
+      animation: loadProgress 2.5s forwards ease-in-out;
+    }
+
+    @keyframes loadProgress {
+      0% { width: 0%; }
+      50% { width: 75%; }
+      100% { width: 100%; }
+    }
+
+    @keyframes rotateCircuit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- شاشة الترحيب تظهر أول مرة فقط في الجلسة -->
+  <div id="splash-screen">
+    <div class="splash-container">
+      <div class="logo-box">
+        <div class="logo-inner">
+          <div class="logo-symbol" title="AF-Tech Power & Code">
+            ⚡&lt;/&gt;
+          </div>
+        </div>
+      </div>
+      <h1><span>AF</span>-Tech</h1>
+      <p>جاري تحميل الحلول التقنية المتكاملة...</p>
+      <div class="loader-bar">
+        <div class="loader-progress"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- الهيدر والقائمة الرئيسية للموقع -->
+  <header class="topbar">
+    <a class="brand" href="index.html"><span>AF</span>-Tech</a>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <a href="auth.html" class="btn primary" id="authBtn" style="padding: 6px 14px; font-size: 14px;">تسجيل الدخول</a>
+      <button class="menu-btn" id="menuBtn">☰</button>
+    </div>
+    <nav id="nav">
+      <a href="index.html" class="active">الرئيسية</a>
+      <a href="index.html#services">الخدمات</a>
+      <a href="products.html">المنتجات</a>
+      <a href="community.html">المنتدى</a>
+      <a href="explanations.html">💡 الشروحات</a>
+      <a href="chat.html">المحادثات 💬</a>
+      <a href="index.html#about">من نحن</a>
+      <a href="index.html#contact">تواصل معنا</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">حلول تقنية متكاملة</p>
+        <h1>AF-Tech</h1>
+        <h2>خدمات تقنية • منتجات • دعم فني • مجتمع</h2>
+        <p>منصة واحدة لعرض خدماتك، منتجاتك، شروحاتك وملفات الأجهزة، مع مجتمع تقني تحت إشراف الإدارة.</p>
+        <div class="actions">
+          <a class="btn ghost" href="index.html">🏠 الصفحة الرئيسية</a>
+          <a class="btn primary" href="products.html">📦 تصفح المنتجات</a>
+          <a class="btn ghost" href="explanations.html">💡 الشروحات</a>
+          <a class="btn ghost" href="community.html">💬 المنتدى</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="pulse">●</div>
+        <h3>الدعم الفني المباشر</h3>
+        <p>تواصل مع AF-Tech واطلب الخدمة التي تحتاجها عبر الشات المباشر.</p>
+        <a class="btn primary full" href="chat.html">تحدث معنا الآن</a>
+      </div>
+    </section>
+
+    <section id="services" class="section">
+      <div class="section-head"><p class="eyebrow">خدماتنا</p><h2>خدمات AF-Tech</h2></div>
+      <div class="cards">
+        <article class="card"><b>📷</b><h3>كاميرات مراقبة</h3><p>تركيب وبرمجة وصيانة أنظمة المراقبة.</p></article>
+        <article class="card"><b>🌐</b><h3>شبكات</h3><p>تأسيس وبرمجة وصيانة شبكات الإنترنت.</p></article>
+        <article class="card"><b>💻</b><h3>برمجة وأنظمة حسابات</h3><p>أنظمة POS وإدارة المبيعات والمخزون.</p></article>
+        <article class="card"><b>📡</b><h3>ريسيفرات ودش</h3><p>برمجة وصيانة وضبط أجهزة الاستقبال.</p></article>
+        <article class="card"><b>🔧</b><h3>إلكترونيات وهاردوير</h3><p>فحص وإصلاح وبرمجة الأجهزة والمكونات.</p></article>
+        <article class="card"><b>🖥️</b><h3>كمبيوتر وشاشات</h3><p>صيانة وبرمجة وتجهيز الأجهزة.</p></article>
+      </div>
+    </section>
+
+    <section id="about" class="section alt">
+      <div class="section-head"><p class="eyebrow">عن المنصة</p><h2>من نحن</h2></div>
+      <div class="card" style="max-width: 800px; margin: 0 auto; text-align: center;">
+        <h3>AF-Tech للحلول والخدمات التقنية</h3>
+        <p>منصة متخصصة في تقديم أحدث الخدمات التقنية، صيانة البرمجيات والهاردوير، شبكات الإنترنت، أنظمة الكاشير والكاميرات تحت إشراف هندسي متكامل.</p>
+        <a class="btn primary" href="chat.html" style="margin-top: 15px;">💬 التواصل مع الإدارة عبر الشات</a>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact">
+      <div><p class="eyebrow">الدعم</p><h2>تواصل مع AF-Tech</h2></div>
+      <div class="contact-box">
+        <a class="btn primary full" href="https://wa.me/201204432126" target="_blank">📱 واتساب</a>
+        <a class="btn ghost full" href="tel:+201204432126">📞 اتصال</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast"></div>
+  <footer>Under the management of Eng. Ahmed El Dahrawy</footer>
+  
+  <script src="app.js"></script>
+  <script>
+    // التحقق من ظهور شاشة الترحيب مرة واحدة فقط في الجلسة الحالية
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash-screen');
+      
+      if (sessionStorage.getItem('splashShown')) {
+        // إذا ظهرت مسبقاً، يتم إخفاؤها فوراً بدون انتظار
+        if (splash) {
+          splash.style.display = 'none';
+        }
+      } else {
+        // إذا كانت المرة الأولى، يتم عرضها ثم إخفاؤها بعد 2.8 ثانية وتسجيلها في الذاكرة
+        setTimeout(() => {
+          if (splash) {
+            splash.classList.add('fade-out');
+            setTimeout(() => {
+              splash.style.display = 'none';
+            }, 600);
+          }
+          sessionStorage.setItem('splashShown', 'true');
+        }, 2800);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم الشاملة | AF-Tech</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const ADMIN_PASS = "05082026AF";
+
+    function protectPage() {
+      if (sessionStorage.getItem('admin_authenticated') === 'true') return;
+      let entered = prompt('🔐 هذه الصفحة محمية خاصة بالأدمن، يرجى إدخال رمز المرور:');
+      if (!entered) { window.location.href = 'index.html'; return; }
+      if (entered.trim() === ADMIN_PASS) {
+        sessionStorage.setItem('admin_authenticated', 'true');
+        alert('✅ تم التحقق بنجاح');
+      } else {
+        alert('❌ رمز المرور غير صحيح!');
+        window.location.href = 'index.html';
+      }
+    }
+    protectPage();
+  </script>
+
+  <style>
+    :root {
+      --bg-color: #0b132b;
+      --card-bg: #1c2541;
+      --accent-color: #0077b6;
+      --text-color: #ffffff;
+      --text-muted: #a0aec0;
+      --danger-color: #e63946;
+    }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-color); direction: rtl; }
+    header { background-color: var(--card-bg); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .logo { font-size: 1.5rem; font-weight: bold; color: #3a86ff; }
+    .btn-logout { background-color: var(--danger-color); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .card { background-color: var(--card-bg); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+    h2, h3 { margin-top: 0; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; display: inline-block; }
+    input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; box-sizing: border-box; }
+    button.action-btn { background: #0077b6; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: right; }
+    .select-role { background: #0b132b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 6px; }
+    .btn-ban { background-color: #e63946; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    .btn-unban { background-color: #2a9d8f; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    #toast { position: fixed; bottom: 20px; right: 20px; background-color: #333; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">AF-Tech | لوحة الإدارة (أدمن فقط)</div>
+    <div style="display: flex; gap: 10px;">
+      <a href="index.html" style="background:#0077b6; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; font-size:14px;">الرئيسية</a>
+      <a href="explanations.html" style="background:#2a9d8f; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; font-size:14px;">💡 الشروحات</a>
+      <button class="btn-logout" onclick="sessionStorage.removeItem('admin_authenticated'); window.location.href='index.html';">خروج</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>مرحباً بك يا مهندس أحمد (الأدمن)</h2>
+      <p>من هذه اللوحة يمكنك التحكم بالأعضاء، المنتجات، وإضافة أو تعديل وحذف الشروحات وملفات التحميل وبرامج الكمبيوتر وفيديوهات اليوتيوب.</p>
+    </div>
+
+    <!-- إدارة أعضاء الموقع -->
+    <div class="card">
+      <h3>👥 إدارة أعضاء الموقع والصلاحيات</h3>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم الحقيقي</th>
+              <th>رقم الموبايل</th>
+              <th>الرتبة</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr><td colspan="5" style="text-align:center;">جاري تحميل الأعضاء...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- نموذج إضافة أو تعديل منتج -->
+    <div class="card">
+      <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
+      <input type="hidden" id="editProductId">
+      <input type="text" id="pName" placeholder="اسم المنتج">
+      <select id="pCategory">
+        <option value="pos">أنظمة الكاشير (POS)</option>
+        <option value="receivers">الرسيفرات</option>
+        <option value="hardware">هاردوير وأجهزة</option>
+        <option value="cameras">كاميرات المراقبة</option>
+        <option value="screens">الشاشات</option>
+        <option value="mobiles">الموبايلات</option>
+        <option value="networks">الشبكات</option>
+      </select>
+      <input type="text" id="pPrice" placeholder="السعر (مثال: 500 جنيه)">
+      <textarea id="pDesc" placeholder="تفاصيل المنتج..."></textarea>
+      <label style="font-size:13px; color:#a0aec0;">إرفاق صورة:</label>
+      <input type="file" id="pImageFile" accept="image/*">
+      <br><br>
+      <button class="action-btn" onclick="saveProduct()">حفظ ونشر المنتج</button>
+      <button id="cancelEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetProductForm()">إلغاء التعديل</button>
+    </div>
+
+    <!-- إدارة المنتجات -->
+    <div class="card">
+      <h3>📦 إدارة المنتجات</h3>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>الصورة</th>
+              <th>الاسم</th>
+              <th>القسم</th>
+              <th>السعر</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminProductsList">
+            <tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- نموذج إضافة أو تعديل شرح / ملف / فيديو يوتيوب -->
+    <div class="card">
+      <h3 id="explanationFormTitle">💡 إضافة شرح أو ملف / برنامج جديد</h3>
+      <input type="hidden" id="editExplanationId">
+      <input type="text" id="eTitle" placeholder="عنوان الشرح أو البرنامج (مثال: أحدث ملف قنوات نايل سات أو برنامج تفعيل)">
+      <textarea id="eDesc" placeholder="تفاصيل الشرح أو تعليمات الاستخدام..."></textarea>
+      <input type="text" id="eYoutubeUrl" placeholder="رابط فيديو يوتيوب (مثال: https://www.youtube.com/watch?v=...)">
+      <input type="text" id="eFileUrl" placeholder="رابط تحميل الملف أو البرنامج (مثل رابط مباشر، ميديافاير، أو ملف قنوات)">
+      <label style="font-size:13px; color:#a0aec0;">أو إرفاق صورة مصغرة للشرح:</label>
+      <input type="file" id="eImageFile" accept="image/*">
+      <br><br>
+      <button class="action-btn" onclick="saveExplanation()">حفظ ونشر الشرح</button>
+      <button id="cancelExplanationEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetExplanationForm()">إلغاء التعديل</button>
+    </div>
+
+    <!-- جدول إدارة الشروحات والملفات -->
+    <div class="card">
+      <h3>📚 إدارة الشروحات والملفات والبرامج المنشورة</h3>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>العنوان</th>
+              <th>فيديو يوتيوب</th>
+              <th>ملف التحميل</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="adminExplanationsList">
+            <tr><td colspan="4" style="text-align:center;">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof loadAdminData === 'function') {
+        loadAdminData();
+      }
+      if (typeof loadAdminExplanations === 'function') {
+        loadAdminExplanations();
+      }
+    });
+  </script>
+</body>
+</html>

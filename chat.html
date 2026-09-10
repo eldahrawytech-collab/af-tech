@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AF-Tech | المحادثات والدعم الفني</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .chat-container { display: grid; grid-template-columns: 320px 1fr; gap: 20px; height: 75vh; margin-top: 20px; }
+    .chat-users { background: #0d2033; border: 1px solid #1d3d57; border-radius: 16px; padding: 15px; overflow-y: auto; }
+    .user-item { padding: 12px; border-radius: 10px; background: #071522; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+    .user-item:hover, .user-item.active { border-color: #168fe0; background: rgba(22, 143, 224, 0.1); }
+    .chat-box { background: #0d2033; border: 1px solid #1d3d57; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 75%; padding: 12px 16px; border-radius: 14px; line-height: 1.5; font-size: 14px; }
+    .msg.me { align-self: flex-start; background: #168fe0; color: #fff; border-bottom-right-radius: 2px; }
+    .msg.other { align-self: flex-end; background: #071522; color: #eef6ff; border: 1px solid #1d3d57; border-bottom-left-radius: 2px; }
+    .chat-input { display: flex; gap: 10px; padding: 15px; background: #0b1a2b; border-top: 1px solid #1d3d57; }
+    .chat-input input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #24475f; background: #071522; color: #fff; font-family: inherit; }
+    @media (max-width: 768px) { .chat-container { grid-template-columns: 1fr; height: auto; } }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span>AF</span>-Tech</a>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
+    <button class="menu-btn" id="menuBtn">☰</button>
+  </div>
+  <nav id="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html">المنتجات</a>
+    <a href="community.html">المنتدى</a>
+    <a href="chat.html" class="active">المحادثات 💬</a>
+  </nav>
+</header>
+
+<main class="section">
+  <div class="section-head">
+    <p class="eyebrow">الدعم المباشر</p>
+    <h2 id="chatPageTitle">محادثات الدعم الفني</h2>
+  </div>
+
+  <div class="chat-container">
+    <!-- قائمة العملاء تظهر فقط للأدمن والمشرفين -->
+    <div class="chat-users" id="chatUsersList" style="display: none;">
+      <h4 style="margin-top:0; color:#20a4ff;">👥 قائمة العملاء:</h4>
+      <div id="usersListContainer">جاري التحميل...</div>
+    </div>
+
+    <!-- صندوق المحادثة -->
+    <div class="chat-box">
+      <div class="chat-messages" id="chatMessages">
+        <p style="text-align:center; color:#8fa7ba; padding: 20px;">جاري تحميل المحادثة...</p>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <button class="btn primary" onclick="sendChatMessage()">إرسال</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+<footer>Under the management of Eng. Ahmed El Dahrawy</footer>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if(typeof initChatSystem === 'function') initChatSystem();
+  });
+</script>
+</body>
+</html>

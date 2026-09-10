@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AF-Tech | الشروحات والملفات</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <!-- مكتبة Supabase للتحقق من الجلسة والصلاحيات -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span>AF</span>-Tech</a>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
+    <button class="menu-btn" id="menuBtn">☰</button>
+  </div>
+  <nav id="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html">المنتجات</a>
+    <a href="community.html">المنتدى</a>
+    <a href="explanations.html" class="active">💡 الشروحات</a>
+    <a href="chat.html">المحادثات 💬</a>
+  </nav>
+</header>
+
+<main class="section">
+  <div class="section-head">
+    <p class="eyebrow">قسم الدعم الفني والمعرفة</p>
+    <h2>الشروحات والملفات التقنية</h2>
+  </div>
+
+  <!-- حاوية محتوى الشروحات (تظهر فقط للمسجلين) -->
+  <div id="protectedContent" style="display: none;">
+    <!-- خانة البحث داخل الشروحات -->
+    <div style="margin: 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+      <input type="text" id="explanationsSearchInput" placeholder="🔍 ابحث في الشروحات، الكود، أو الملفات..." oninput="filterExplanationsSearch()" style="width: 100%; padding: 12px; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+    </div>
+
+    <!-- حاوية عرض الشروحات -->
+    <div class="explanations-container" id="explanationsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+      <!-- سيتم تعبئة الشروحات تلقائياً من الجافاسكريبت -->
+    </div>
+  </div>
+
+  <!-- رسالة التنبيه التي تظهر للمستخدم غير المسجل -->
+  <div id="loginPromptMessage" style="display: none; text-align: center; padding: 50px 20px; background: rgba(11, 19, 43, 0.6); border: 1px solid rgba(32, 164, 255, 0.2); border-radius: 12px; max-width: 600px; margin: 40px auto;">
+    <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+    <h3 style="color: #fff; font-size: 22px; margin-bottom: 10px;">يرجى تسجيل الدخول أولاً لرؤية القسم</h3>
+    <p style="color: #8fa7ba; font-size: 15px; margin-bottom: 25px;">عذراً، هذا القسم مخصص للمستخدمين المسجلين فقط للاطلاع على الشروحات والملفات التقنية.</p>
+    <a href="auth.html" class="btn primary" style="display: inline-block; padding: 10px 25px; font-size: 15px;">تسجيل الدخول / إنشاء حساب</a>
+  </div>
+</main>
+
+<div id="toast"></div>
+<footer>Under the management of Eng. Ahmed El Dahrawy</footer>
+
+<script src="app.js"></script>
+<script>
+  // دالة فحص الجلسة وإظهار/إخفاء المحتوى بناءً عليها باستخدام _supabase المعرف في app.js
+  async function checkAuthAndToggleContent() {
+    const protectedContent = document.getElementById('protectedContent');
+    const loginPromptMessage = document.getElementById('loginPromptMessage');
+
+    try {
+      // الانتظار حتى يتم تحميل الكائن _supabase من app.js إذا لزم الأمر
+      let attempts = 0;
+      while (typeof _supabase === 'undefined' && attempts < 15) {
+        await new Promise(r => setTimeout(r, 200));
+        attempts++;
+      }
+
+      if (typeof _supabase !== 'undefined') {
+        const { data: { session } } = await _supabase.auth.getSession();
+        
+        if (session) {
+          // المستخدم مسجل دخول بنجاح
+          if (protectedContent) protectedContent.style.display = 'block';
+          if (loginPromptMessage) loginPromptMessage.style.display = 'none';
+          if (typeof renderExplanationsPage === 'function') {
+            renderExplanationsPage();
+          }
+        } else {
+          // غير مسجل دخول
+          if (protectedContent) protectedContent.style.display = 'none';
+          if (loginPromptMessage) loginPromptMessage.style.display = 'block';
+        }
+      } else {
+        // احتياطي في حال عدم تحميل الاتصال
+        if (protectedContent) protectedContent.style.display = 'none';
+        if (loginPromptMessage) loginPromptMessage.style.display = 'block';
+      }
+    } catch (err) {
+      console.error('خطأ في التحقق من الجلسة:', err);
+      if (protectedContent) protectedContent.style.display = 'none';
+      if (loginPromptMessage) loginPromptMessage.style.display = 'block';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAuthAndToggleContent();
+  });
+</script>
+
+</body>
+</html>
