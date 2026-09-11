@@ -8,32 +8,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // حماية الصفحة بحيث لا يدخلها إلا الأدمن أو المشرف أو المهندس
-    async function protectOrdersPage() {
-      let attempts = 0;
-      while (typeof _supabase === 'undefined' && attempts < 15) {
-        await new Promise(r => setTimeout(r, 200));
-        attempts++;
+  // حماية الصفحة بحيث لا يدخلها إلا الأدمن أو المشرف فقط
+  async function protectOrdersPage() {
+    let attempts = 0;
+    while (typeof _supabase === 'undefined' && attempts < 15) {
+      await new Promise(r => setTimeout(r, 200));
+      attempts++;
+    }
+    if (typeof _supabase !== 'undefined') {
+      const { data: { user } } = await _supabase.auth.getUser();
+      if (!user) {
+        alert('⚠️ يجب تسجيل الدخول أولاً');
+        window.location.href = 'auth.html';
+        return;
       }
-      if (typeof _supabase !== 'undefined') {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) {
-          alert('⚠️ يجب تسجيل الدخول أولاً');
-          window.location.href = 'auth.html';
-          return;
-        }
-        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
-        const ADMIN_UID = '297a5cbc-a0b2-4ea3-a1c2-b998a56d7b44';
-        const isStaff = user.id === ADMIN_UID || profile?.role === 'admin' || profile?.role === 'moderator' || profile?.role === 'technician';
-        
-        if (!isStaff) {
-          alert('🚫 عذراً، هذه الصفحة مخصصة للمشرفين والإدارة فقط.');
-          window.location.href = 'index.html';
-        }
+      const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
+      const ADMIN_UID = '297a5cbc-a0b2-4ea3-a1c2-b998a56d7b44';
+      
+      // السماح للأدمن أو المشرف فقط (تم استبعاد المهندس هنا بناءً على طلبك)
+      const isAuthorizedAdminOrMod = user.id === ADMIN_UID || profile?.role === 'admin' || profile?.role === 'moderator';
+      
+      if (!isAuthorizedAdminOrMod) {
+        alert('🚫 عذراً، هذه الصفحة مخصصة للأدمن والمشرفين فقط.');
+        window.location.href = 'index.html';
       }
     }
-    protectOrdersPage();
-  </script>
+  }
+  protectOrdersProfile();
+</script>
+
 </head>
 <body>
 
