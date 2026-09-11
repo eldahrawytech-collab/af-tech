@@ -294,17 +294,181 @@ function toggleCartModal() {
   }
 }
 
+// --- تعديل وتطوير نظام إتمام الطلب ---
+
 function checkoutCart() {
   if (cart.length === 0) {
     showToast('⚠️ السلة فارغة!');
     return;
   }
-  let orderSummary = cart.map(i => `${i.name} (${i.qty} قطعة)`).join('، ');
-  let total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-  
-  alert(`تم تجهيز طلبك بنجاح!\nالمنتجات: ${orderSummary}\nالإجمالي: ${total} جنيه\nسيتم توجيهك الآن للدعم أو إتمام الطلب.`);
-  window.location.href = 'chat.html';
+
+  // 1. التحقق مما إذا كان المستخدم مسجل الدخول أم لا
+  if (!currentUser) {
+    showToast('⚠️ يجب تسجيل الدخول أولاً لإتمام الطلب');
+    setTimeout(() => {
+      window.location.href = 'auth.html';
+    }, 1000);
+    return;
+  }
+
+  // 2. إغلاق سلة المشتريات وفتح نافذة إدخال بيانات الشحن (رقم الموبايل والعنوان)
+  toggleCartModal();
+  openCheckoutModal();
 }
+
+// فتح نافذة إدخال بيانات التوصيل
+function openCheckoutModal() {
+  let existingModal = document.getElementById('checkoutDataModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  const modalHtml = `
+    <div class="cart-modal" id="checkoutDataModal" style="display: flex;">
+      <div class="cart-content" style="max-width: 400px;">
+        <div class="cart-header">
+          <h3 style="margin:0; font-size:18px;">📍 بيانات الشحنة والتوصيل</h3>
+          <button class="close-modal" onclick="document.getElementById('checkoutDataModal').remove()">✕</button>
+        </div>
+        <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 13px; color: #8fa7ba; display: block; margin-bottom: 5px;">رقم الموبايل للتواصل:</label>
+            <input type="text" id="orderPhone" placeholder="01012345678" value="${currentProfile?.phone || ''}" style="width: 100%; padding: 10px; background: #050c14; border: 1px solid #1a2d42; color: #fff; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+          </div>
+          <div>
+            <label style="font-size: 13px; color: #8fa7ba; display: block; margin-bottom: 5px;">العنوان بالتفصيل (المحافظة، المجاورة، الشارع، الدور):</label>
+            <textarea id="orderAddress" placeholder="اكتب عنوانك بالتفصيل هنا..." style="width: 100%; padding: 10px; background: #050c14; border: 1px solid #1a2d42; color: #fff; border-radius: 8px; font-size: 14px; height: 90px; box-sizing: border-box; font-family: inherit;"></textarea>
+          </div>
+        </div>
+        <div class="cart-footer" style="margin-top: 15px;">
+          <button class="btn ghost" onclick="document.getElementById('checkoutDataModal').remove()" style="padding: 6px 14px; font-size: 14px;">إلغاء</button>
+          <button class="btn primary" onclick="submitFinalOrder()" style="padding: 6px 14px; font-size: 14px;">تأكيد وإرسال الطلب</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// تأكيد وإرسال تفاصيل الأوردر إلى قاعدة البيانات
+async function submitFinalOrder() {
+  const phoneInput = document.getElementById('orderPhone');
+  const addressInput = document.getElementById('orderAddress');
+
+  if (!phoneInput || !addressInput) return;
+
+  const phone = phoneInput.value.trim();
+  const address = addressInput.value.trim();
+
+  if (!phone || !address) {
+    showToast('⚠️ يرجى إدخال رقم الموبايل والعنوان بالتفصيل');
+    return;
+  }
+
+  if (!isValidEgyptianPhone(phone)) {
+    showToast('📱 يرجى إدخال رقم موبايل مصري صحيح');
+    return;
+  }
+
+  showToast('⏳ جاري إرسال طلبك...');
+
+  let totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  let userName = currentProfile?.full_name || currentUser.user_metadata?.full_name || 'مستخدم';
+  let accountPhone = currentProfile?.phone || currentUser.user_metadata?.phone || '';
+
+  // تجهيز بيانات الطلب للإرسال
+  const orderData = {
+    user_id: currentUser.id,
+    user_name: userName,
+    account_phone: accountPhone,
+    phone: phone,
+    address: address,
+    items: cart, // تخزين المنتجات (اسم، سعر، كمية)
+    total: `${totalPrice} جنيه`,
+    created_at: new Date().toISOString()
+  };
+
+  const { error } = await _supabase.from('orders').insert([orderData]);
+
+  if (error) {
+    console.error('Order Error:', error);
+    showToast('❌ فشل إرسال الطلب: ' + error.message);
+  } else {
+    showToast('✅ تم إرسال طلبك بنجاح!');
+    
+    // إغلاق نافذة البيانات، تفريغ السلة وتحديث الواجهة
+    const modal = document.getElementById('checkoutDataModal');
+    if (modal) modal.remove();
+    
+    cart = [];
+    saveAndRefreshCart();
+
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1500);
+  }
+}
+
+// دالة لجلب وعرض الطلبات في صفحة الإدارة/الطلبات (orders.html)
+async function loadAdminOrders() {
+  const tableBody = document.getElementById('ordersTableBody');
+  if (!tableBody) return;
+
+  const { data: orders, error } = await _supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error loading orders:', error);
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#e63946; padding:20px;">خطأ في تحميل الطلبات</td></tr>';
+    return;
+  }
+
+  if (!orders || orders.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#8fa7ba; padding:20px;">لا توجد طلبات مسجلة حتى الآن</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = orders.map(ord => {
+    // تنسيق عرض المنتجات (اسم الصنف - السعر - الكمية)
+    let itemsList = '';
+    if (Array.isArray(ord.items)) {
+      itemsList = ord.items.map(i => `• ${escapeHtml(i.name)} (${i.qty} قطعة) - ${i.price * i.qty} جنيه`).join('<br>');
+    } else {
+      itemsList = 'تفاصيل غير متوفرة';
+    }
+
+    const dateStr = new Date(ord.created_at).toLocaleString('ar-EG');
+
+    return `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px;">
+        <td style="padding: 12px; color: #20a4ff; font-weight: bold;">👤 ${escapeHtml(ord.user_name)}</td>
+        <td style="padding: 12px;">📞 ${escapeHtml(ord.account_phone || 'غير مسجل')}</td>
+        <td style="padding: 12px; color: #42d6a0;">📱 ${escapeHtml(ord.phone)}</td>
+        <td style="padding: 12px; line-height: 1.6;">${itemsList}<br><strong style="color: #20a4ff;">الإجمالي: ${escapeHtml(ord.total)}</strong></td>
+        <td style="padding: 12px; max-width: 200px; word-break: break-word;">📍 ${escapeHtml(ord.address)}</td>
+        <td style="padding: 12px; font-size: 12px; color: #8fa7ba;">${dateStr}</td>
+        <td style="padding: 12px;">
+          <button onclick="deleteOrder('${ord.id}')" style="background: #e63946; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">🗑️ حذف</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// حذف طلب من لوحة التحكم
+async function deleteOrder(orderId) {
+  if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+  const { error } = await _supabase.from('orders').delete().eq('id', orderId);
+  if (error) {
+    showToast('❌ فشل حذف الطلب');
+  } else {
+    showToast('✅ تم حذف الطلب بنجاح');
+    loadAdminOrders();
+  }
+}
+
 
 // ==========================================
 // --- 7. نظام الشات المطور ---
