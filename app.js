@@ -1064,3 +1064,173 @@ function showToast(t) {
   clearTimeout(window.tt);
   window.tt = setTimeout(() => (x.style.display = 'none'), 3000);
 }
+// ==========================================
+// --- 11. نظام سلة المشتريات والطلبات ---
+// ==========================================
+
+let cart = JSON.parse(localStorage.getItem('af_cart')) || [];
+
+function addToCart(id, name, price) {
+  const existingItem = cart.find(item => item.id === id);
+  if (existingItem) {
+    existingItem.qty += 1;
+  } else {
+    cart.push({ id, name, price, qty: 1 });
+  }
+  saveCart();
+  showToast(`✅ تم إضافة "${name}" إلى السلة`);
+}
+
+function saveCart() {
+  localStorage.setItem('af_cart', JSON.stringify(cart));
+  updateCartCount();
+}
+
+function updateCartCount() {
+  const countEl = document.getElementById('cartCount');
+  if (countEl) {
+    const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+    countEl.textContent = totalQty;
+  }
+}
+
+function toggleCartModal() {
+  const modal = document.getElementById('cartModal');
+  if (!modal) return;
+  if (modal.style.display === 'flex') {
+    modal.style.display = 'none';
+  } else {
+    modal.style.display = 'flex';
+    renderCartItems();
+  }
+}
+
+function renderCartItems() {
+  const container = document.getElementById('cartItemsList');
+  if (!container) return;
+
+  if (cart.length === 0) {
+    container.innerHTML = '<p style="text-align:center; color:#8fa7ba; padding:15px;">السلة فارغة حالياً.</p>';
+    return;
+  }
+
+  container.innerHTML = cart.map((item, index) => `
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #0b132b; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+      <div>
+        <div style="font-weight: bold; color: #fff; font-size: 14px;">${escapeHtml(item.name)}</div>
+        <div style="color: #42d6a0; font-size: 13px;">${escapeHtml(item.price)} × ${item.qty}</div>
+      </div>
+      <button onclick="removeFromCart(${index})" style="background: #e63946; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">حذف</button>
+    </div>
+  `).join('');
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  saveCart();
+  renderCartItems();
+}
+
+async function submitOrder() {
+  if (cart.length === 0) {
+    return showToast('⚠️ السلة فارغة، اختر منتجات أولاً');
+  }
+
+  const phoneInput = document.getElementById('orderPhone').value.trim();
+  const addressInput = document.getElementById('orderAddress').value.trim();
+
+  if (!phoneInput || !addressInput) {
+    return showToast('⚠️ يرجى إدخال رقم الموبايل والعنوان بالتفصيل');
+  }
+
+  if (!currentUser) {
+    const { data: { user } } = await _supabase.auth.getUser();
+    if (!user) {
+      showToast('⚠️ يجب تسجيل الدخول لتأكيد الطلب');
+      setTimeout(() => { window.location.href = 'auth.html'; }, 1000);
+      return;
+    }
+    currentUser = user;
+  }
+
+  if (!currentProfile && currentUser) {
+    const { data: profile } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (profile) currentProfile = profile;
+  }
+
+  const userName = currentProfile?.full_name || currentUser.user_metadata?.full_name || 'مستخدم';
+  const registeredPhone = currentProfile?.phone || currentUser.user_metadata?.phone || 'غير مسجل';
+
+  showToast('⏳ جاري إرسال الطلب...');
+
+  const orderData = {
+    user_id: currentUser.id,
+    user_name: userName,
+    registered_phone: registeredPhone,
+    order_phone: phoneInput,
+    address: addressInput,
+    items: cart,
+    created_at: new Date().toISOString()
+  };
+
+  const { error } = await _supabase.from('orders').insert([orderData]);
+
+  if (error) {
+    console.error('Order Error:', error);
+    showToast('❌ خطأ في إرسال الطلب: ' + error.message);
+  } else {
+    showToast('✅ تم تأكيد الطلب بنجاح! تتابع الإدارة طلبك.');
+    cart = [];
+    saveCart();
+    toggleCartModal();
+  }
+}
+
+async function loadAdminOrders() {
+  const tableBody = document.getElementById('ordersTableBody');
+  if (!tableBody) return;
+
+  const { data: orders, error } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error loading orders:', error);
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#e63946; padding:20px;">خطأ في جلب الطلبات. تأكد من إنشاء جدول orders في قاعدة البيانات.</td></tr>';
+    return;
+  }
+
+  if (!orders || orders.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#8fa7ba; padding:20px;">لا توجد طلبات جديدة حتى الآن.</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = orders.map(o => {
+    let itemsHtml = (o.items || []).map(i => `• ${escapeHtml(i.name)} (${i.qty})`).join('<br>');
+    let dateStr = new Date(o.created_at).toLocaleString();
+
+    return `
+      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <td style="padding: 10px; font-weight: bold; color: #20a4ff;">👤 ${escapeHtml(o.user_name)}</td>
+        <td style="padding: 10px; color: #a0aec0;">📞 ${escapeHtml(o.registered_phone)}</td>
+        <td style="padding: 10px; color: #42d6a0; font-weight: bold;">📱 ${escapeHtml(o.order_phone)}</td>
+        <td style="padding: 10px; font-size: 13px;">${itemsHtml}</td>
+        <td style="padding: 10px; font-size: 13px; max-width: 200px; word-break: break-word;">📍 ${escapeHtml(o.address)}</td>
+        <td style="padding: 10px; font-size: 12px; color: #a0aec0;">${dateStr}</td>
+        <td style="padding: 10px;">
+          <button onclick="deleteOrder('${o.id}')" style="background:#e63946; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px;">🗑️ حذف</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function deleteOrder(orderId) {
+  if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
+  const { error } = await _supabase.from('orders').delete().eq('id', orderId);
+  if (error) {
+    showToast('❌ خطأ في الحذف');
+  } else {
+    showToast('✅ تم حذف الطلب بنجاح');
+    loadAdminOrders();
+  }
+}
+
