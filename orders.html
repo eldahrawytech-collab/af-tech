@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AF-Tech | إدارة الطلبات</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // حماية الصفحة بحيث لا يدخلها إلا الأدمن أو المشرف أو المهندس
+    async function protectOrdersPage() {
+      let attempts = 0;
+      while (typeof _supabase === 'undefined' && attempts < 15) {
+        await new Promise(r => setTimeout(r, 200));
+        attempts++;
+      }
+      if (typeof _supabase !== 'undefined') {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) {
+          alert('⚠️ يجب تسجيل الدخول أولاً');
+          window.location.href = 'auth.html';
+          return;
+        }
+        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
+        const ADMIN_UID = '297a5cbc-a0b2-4ea3-a1c2-b998a56d7b44';
+        const isStaff = user.id === ADMIN_UID || profile?.role === 'admin' || profile?.role === 'moderator' || profile?.role === 'technician';
+        
+        if (!isStaff) {
+          alert('🚫 عذراً، هذه الصفحة مخصصة للمشرفين والإدارة فقط.');
+          window.location.href = 'index.html';
+        }
+      }
+    }
+    protectOrdersPage();
+  </script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span>AF</span>-Tech</a>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <a href="products.html" style="background:#0077b6; color:#fff; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:14px;">المتجر</a>
+    <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
+    <button class="menu-btn" id="menuBtn">☰</button>
+  </div>
+  <nav id="nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html">المنتجات</a>
+    <a href="community.html">المنتدى</a>
+    <a href="explanations.html">💡 الشروحات</a>
+    <a href="chat.html">المحادثات 💬</a>
+    <a href="orders.html" class="active" style="color: #42d6a0;">📋 الطلبات</a>
+  </nav>
+</header>
+
+<main class="section">
+  <div class="section-head">
+    <p class="eyebrow">لوحة الإدارة والمتابعة</p>
+    <h2>طلبات العملاء الواردة</h2>
+  </div>
+
+  <div class="card" style="background: #1c2541; padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="border-bottom: 2px solid #0077b6; text-align: right;">
+            <th style="padding: 10px;">اسم المستخدم</th>
+            <th style="padding: 10px;">الرقم المسجل بالحساب</th>
+            <th style="padding: 10px;">رقم الموبايل المضاف للطلب</th>
+            <th style="padding: 10px;">المنتجات المطلوبة</th>
+            <th style="padding: 10px;">العنوان بالتفصيل</th>
+            <th style="padding: 10px;">التاريخ</th>
+            <th style="padding: 10px;">الإجراء</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <tr><td colspan="7" style="text-align:center; padding: 20px; color: #8fa7ba;">جاري تحميل الطلبات...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+<footer>Under the management of Eng. Ahmed El Dahrawy</footer>
+<script src="app.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    if(typeof loadAdminOrders === 'function') loadAdminOrders();
+  });
+</script>
+</body>
+</html>
