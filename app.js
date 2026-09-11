@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- 1. التحقق من الحساب وعرض الاسم الحقيقي والشارة وزر لوحة التحكم للأدمن ---
+// --- 1. التحقق من الحساب وعرض الاسم الحقيقي والشارة وزر لوحة التحكم والطلبات للأدمن والمشرف ---
 async function checkUser() {
   const { data: { user } } = await _supabase.auth.getUser();
   const authBtn = document.getElementById('authBtn');
@@ -57,14 +58,19 @@ async function checkUser() {
     if (authBtn) {
       let roleBadge = '👤 مستخدم';
       let adminDashboardBtn = '';
+      let ordersNavBtn = ''; // زر الطلبات الخاص بالأدمن والمشرف فقط
 
+      // التحقق مما إذا كان المستخدم أدمن أو مشرف لإظهار زر الطلبات ولوحة التحكم
       if (user.id === ADMIN_UID || currentProfile?.role === 'admin') {
         roleBadge = '👑 أدمن';
         adminDashboardBtn = `<a href="admin.html" style="background: #20a4ff; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-left: 5px;">⚙️ لوحة التحكم</a>`;
+        ordersNavBtn = `<a href="orders.html" style="background: #2a9d8f; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-left: 5px;">📋 الطلبات</a>`;
       } else if (currentProfile?.role === 'moderator') {
         roleBadge = '🛡️ مشرف';
+        ordersNavBtn = `<a href="orders.html" style="background: #2a9d8f; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-left: 5px;">📋 الطلبات</a>`;
       } else if (currentProfile?.role === 'technician') {
         roleBadge = '🔧 مهندس';
+        // المهندس لن يظهر له زر الطلبات أو لوحة التحكم هنا
       }
 
       const displayName = currentProfile?.full_name || user.user_metadata?.full_name || 'أحمد مصطفى';
@@ -73,6 +79,7 @@ async function checkUser() {
       if (authContainer) {
         authContainer.innerHTML = `
           <div style="display: flex; align-items: center; gap: 10px;">
+            ${ordersNavBtn}
             ${adminDashboardBtn}
             <span style="color: #20a4ff; font-weight: bold; font-size: 14px; background: rgba(32, 164, 255, 0.1); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(32, 164, 255, 0.2);">
               ${roleBadge} | ${escapeHtml(displayName)}
@@ -86,6 +93,7 @@ async function checkUser() {
     }
   }
 }
+
 
 // --- 2. تسجيل الخروج ---
 async function handleLogout() {
