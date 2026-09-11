@@ -11,9 +11,13 @@ let activeChatUserId = null;
 let messageSubscription = null;
 let currentCategory = 'all';
 
+// --- نظام سلة المشتريات العائمة ---
+let cart = JSON.parse(localStorage.getItem('af_cart')) || [];
+
 // --- تشغيل الدوال الأساسية عند تحميل الصفحة ---
 document.addEventListener('DOMContentLoaded', () => {
   checkUser();
+  updateCartUI();
   
   document.querySelectorAll('.filter').forEach(btn => {
     btn.onclick = () => {
@@ -204,6 +208,102 @@ async function handleLogin(e) {
       window.location.replace('index.html');
     }, 500);
   }
+}
+
+// ==========================================
+// --- نظام سلة المشتريات العائمة (إضافات جديدة) ---
+// ==========================================
+
+function addToCart(name, price) {
+  let numericPrice = parseFloat(price.toString().replace(/[^\d.]/g, '')) || 0;
+  
+  let existingItem = cart.find(item => item.name === name);
+  if (existingItem) {
+    existingItem.qty += 1;
+  } else {
+    cart.push({ name: name, price: numericPrice, qty: 1 });
+  }
+  
+  saveAndRefreshCart();
+  showToast(`✅ تمت إضافة "${name}" إلى السلة`);
+}
+
+function saveAndRefreshCart() {
+  localStorage.setItem('af_cart', JSON.stringify(cart));
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const countSpan = document.getElementById('cartCount');
+  const itemsContainer = document.getElementById('cartItemsContainer');
+  const totalText = document.getElementById('cartTotalText');
+
+  let totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  if (countSpan) countSpan.textContent = totalItemsCount;
+
+  if (!itemsContainer) return;
+
+  if (cart.length === 0) {
+    itemsContainer.innerHTML = '<p style="text-align:center; color:#8fa7ba; padding: 20px;">السلة فارغة حالياً</p>';
+    if (totalText) totalText.textContent = 'إجمالي السعر: 0 جنيه';
+    return;
+  }
+
+  let totalPrice = 0;
+
+  itemsContainer.innerHTML = cart.map((item, index) => {
+    let itemTotal = item.price * item.qty;
+    totalPrice += itemTotal;
+
+    return `
+      <div class="cart-item-row" style="display: flex; justify-content: space-between; align-items: center; background: #050c14; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 14px;">
+        <div>
+          <div style="font-weight: bold; color: #fff;">${escapeHtml(item.name)}</div>
+          <div style="font-size: 12px; color: #42d6a0;">السعر: ${item.price} جنيه</div>
+        </div>
+        <div class="cart-actions-qty" style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="changeQty(${index}, -1)" style="background: #20a4ff; color: #fff; border: none; width: 25px; height: 25px; border-radius: 4px; cursor: pointer; font-weight: bold;">-</button>
+          <span style="font-weight: bold; padding: 0 5px; color:#fff;">${item.qty}</span>
+          <button onclick="changeQty(${index}, 1)" style="background: #20a4ff; color: #fff; border: none; width: 25px; height: 25px; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+          <button class="danger" onclick="removeFromCart(${index})" title="حذف" style="background: #e63946; color: #fff; border: none; width: 25px; height: 25px; border-radius: 4px; cursor: pointer;">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  if (totalText) totalText.textContent = `إجمالي السعر: ${totalPrice} جنيه`;
+}
+
+function changeQty(index, delta) {
+  cart[index].qty += delta;
+  if (cart[index].qty <= 0) {
+    cart.splice(index, 1);
+  }
+  saveAndRefreshCart();
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  saveAndRefreshCart();
+}
+
+function toggleCartModal() {
+  const modal = document.getElementById('cartModal');
+  if (modal) {
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+  }
+}
+
+function checkoutCart() {
+  if (cart.length === 0) {
+    showToast('⚠️ السلة فارغة!');
+    return;
+  }
+  let orderSummary = cart.map(i => `${i.name} (${i.qty} قطعة)`).join('، ');
+  let total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+  
+  alert(`تم تجهيز طلبك بنجاح!\nالمنتجات: ${orderSummary}\nالإجمالي: ${total} جنيه\nسيتم توجيهك الآن للدعم أو إتمام الطلب.`);
+  window.location.href = 'chat.html';
 }
 
 // ==========================================
@@ -442,7 +542,6 @@ function listenToNewMessages() {
 // --- 8. قسم الشروحات والملفات والبرامج ---
 // ==========================================
 
-// دالة تحويل روابط يوتيوب (العادية، القصيرة، وشورتس) إلى روابط Embed
 function getYoutubeEmbedUrl(url) {
   if (!url) return null;
   let videoId = '';
@@ -464,7 +563,6 @@ function getYoutubeEmbedUrl(url) {
   return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 }
 
-// عرض صفحة الشروحات والملفات للزوار والمستخدمين
 async function renderExplanationsPage() {
   const grid = document.getElementById('explanationsGrid');
   if (!grid) return;
@@ -480,7 +578,6 @@ async function renderExplanationsPage() {
     return;
   }
 
-  // تم تصحيح المعرف هنا ليطابق حقل البحث بدقة
   const searchInput = document.getElementById('explanationsSearchInput');
   let filtered = explanations || [];
 
@@ -534,7 +631,6 @@ function filterExplanationsSearch() {
   renderExplanationsPage();
 }
 
-// حفظ أو تحديث شرح / ملف / فيديو في لوحة التحكم
 async function saveExplanation() {
   const editId = document.getElementById('editExplanationId').value;
   const title = document.getElementById('eTitle').value.trim();
@@ -840,7 +936,7 @@ async function deletePost(postId) {
   renderPublicPosts();
 }
 
-// --- 10. المنتجات والبحث فيها ---
+// --- 10. المنتجات والبحث فيها (محدث بزر "اضف للسلة") ---
 async function renderProducts(cat = 'all') {
   if (cat !== undefined) currentCategory = cat;
   const grid = document.getElementById('productsGrid');
@@ -883,7 +979,7 @@ async function renderProducts(cat = 'all') {
       <h3 style="margin:10px 0 5px;">${escapeHtml(p.name)}</h3>
       <p style="color:#42d6a0; font-weight:bold; margin-bottom:5px;">${escapeHtml(p.price)}</p>
       ${p.description ? `<p style="font-size:13px; color:#c9d8e8; margin-bottom:10px;">${escapeHtml(p.description)}</p>` : ''}
-      <a class="btn primary full" href="chat.html">طلب / استفسار</a>
+      <button class="btn primary full" onclick="addToCart('${escapeHtml(p.name).replace(/'/g, "\\'")}', '${escapeHtml(p.price)}')">➕ اضف للسلة</button>
     </article>
   `).join('');
 }
@@ -1064,173 +1160,3 @@ function showToast(t) {
   clearTimeout(window.tt);
   window.tt = setTimeout(() => (x.style.display = 'none'), 3000);
 }
-// ==========================================
-// --- 11. نظام سلة المشتريات والطلبات ---
-// ==========================================
-
-let cart = JSON.parse(localStorage.getItem('af_cart')) || [];
-
-function addToCart(id, name, price) {
-  const existingItem = cart.find(item => item.id === id);
-  if (existingItem) {
-    existingItem.qty += 1;
-  } else {
-    cart.push({ id, name, price, qty: 1 });
-  }
-  saveCart();
-  showToast(`✅ تم إضافة "${name}" إلى السلة`);
-}
-
-function saveCart() {
-  localStorage.setItem('af_cart', JSON.stringify(cart));
-  updateCartCount();
-}
-
-function updateCartCount() {
-  const countEl = document.getElementById('cartCount');
-  if (countEl) {
-    const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-    countEl.textContent = totalQty;
-  }
-}
-
-function toggleCartModal() {
-  const modal = document.getElementById('cartModal');
-  if (!modal) return;
-  if (modal.style.display === 'flex') {
-    modal.style.display = 'none';
-  } else {
-    modal.style.display = 'flex';
-    renderCartItems();
-  }
-}
-
-function renderCartItems() {
-  const container = document.getElementById('cartItemsList');
-  if (!container) return;
-
-  if (cart.length === 0) {
-    container.innerHTML = '<p style="text-align:center; color:#8fa7ba; padding:15px;">السلة فارغة حالياً.</p>';
-    return;
-  }
-
-  container.innerHTML = cart.map((item, index) => `
-    <div style="display: flex; justify-content: space-between; align-items: center; background: #0b132b; padding: 10px; border-radius: 8px; margin-bottom: 8px;">
-      <div>
-        <div style="font-weight: bold; color: #fff; font-size: 14px;">${escapeHtml(item.name)}</div>
-        <div style="color: #42d6a0; font-size: 13px;">${escapeHtml(item.price)} × ${item.qty}</div>
-      </div>
-      <button onclick="removeFromCart(${index})" style="background: #e63946; color: #fff; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">حذف</button>
-    </div>
-  `).join('');
-}
-
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  saveCart();
-  renderCartItems();
-}
-
-async function submitOrder() {
-  if (cart.length === 0) {
-    return showToast('⚠️ السلة فارغة، اختر منتجات أولاً');
-  }
-
-  const phoneInput = document.getElementById('orderPhone').value.trim();
-  const addressInput = document.getElementById('orderAddress').value.trim();
-
-  if (!phoneInput || !addressInput) {
-    return showToast('⚠️ يرجى إدخال رقم الموبايل والعنوان بالتفصيل');
-  }
-
-  if (!currentUser) {
-    const { data: { user } } = await _supabase.auth.getUser();
-    if (!user) {
-      showToast('⚠️ يجب تسجيل الدخول لتأكيد الطلب');
-      setTimeout(() => { window.location.href = 'auth.html'; }, 1000);
-      return;
-    }
-    currentUser = user;
-  }
-
-  if (!currentProfile && currentUser) {
-    const { data: profile } = await _supabase.from('profiles').select('*').eq('id', currentUser.id).single();
-    if (profile) currentProfile = profile;
-  }
-
-  const userName = currentProfile?.full_name || currentUser.user_metadata?.full_name || 'مستخدم';
-  const registeredPhone = currentProfile?.phone || currentUser.user_metadata?.phone || 'غير مسجل';
-
-  showToast('⏳ جاري إرسال الطلب...');
-
-  const orderData = {
-    user_id: currentUser.id,
-    user_name: userName,
-    registered_phone: registeredPhone,
-    order_phone: phoneInput,
-    address: addressInput,
-    items: cart,
-    created_at: new Date().toISOString()
-  };
-
-  const { error } = await _supabase.from('orders').insert([orderData]);
-
-  if (error) {
-    console.error('Order Error:', error);
-    showToast('❌ خطأ في إرسال الطلب: ' + error.message);
-  } else {
-    showToast('✅ تم تأكيد الطلب بنجاح! تتابع الإدارة طلبك.');
-    cart = [];
-    saveCart();
-    toggleCartModal();
-  }
-}
-
-async function loadAdminOrders() {
-  const tableBody = document.getElementById('ordersTableBody');
-  if (!tableBody) return;
-
-  const { data: orders, error } = await _supabase.from('orders').select('*').order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error loading orders:', error);
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#e63946; padding:20px;">خطأ في جلب الطلبات. تأكد من إنشاء جدول orders في قاعدة البيانات.</td></tr>';
-    return;
-  }
-
-  if (!orders || orders.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#8fa7ba; padding:20px;">لا توجد طلبات جديدة حتى الآن.</td></tr>';
-    return;
-  }
-
-  tableBody.innerHTML = orders.map(o => {
-    let itemsHtml = (o.items || []).map(i => `• ${escapeHtml(i.name)} (${i.qty})`).join('<br>');
-    let dateStr = new Date(o.created_at).toLocaleString();
-
-    return `
-      <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <td style="padding: 10px; font-weight: bold; color: #20a4ff;">👤 ${escapeHtml(o.user_name)}</td>
-        <td style="padding: 10px; color: #a0aec0;">📞 ${escapeHtml(o.registered_phone)}</td>
-        <td style="padding: 10px; color: #42d6a0; font-weight: bold;">📱 ${escapeHtml(o.order_phone)}</td>
-        <td style="padding: 10px; font-size: 13px;">${itemsHtml}</td>
-        <td style="padding: 10px; font-size: 13px; max-width: 200px; word-break: break-word;">📍 ${escapeHtml(o.address)}</td>
-        <td style="padding: 10px; font-size: 12px; color: #a0aec0;">${dateStr}</td>
-        <td style="padding: 10px;">
-          <button onclick="deleteOrder('${o.id}')" style="background:#e63946; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px;">🗑️ حذف</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-async function deleteOrder(orderId) {
-  if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
-  const { error } = await _supabase.from('orders').delete().eq('id', orderId);
-  if (error) {
-    showToast('❌ خطأ في الحذف');
-  } else {
-    showToast('✅ تم حذف الطلب بنجاح');
-    loadAdminOrders();
-  }
-}
-
