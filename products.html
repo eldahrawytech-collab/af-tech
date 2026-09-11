@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AF-Tech | المنتجات</title>
+  <title>AF-Tech | المنتجات و السلة</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,6 +13,10 @@
 <header class="topbar">
   <a class="brand" href="index.html"><span>AF</span>-Tech</a>
   <div style="display: flex; align-items: center; gap: 15px;">
+    <!-- زر أيقونة السلة في الهيدر -->
+    <button onclick="toggleCartModal()" style="background: #20a4ff; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+      🛒 السلة (<span id="cartCount">0</span>)
+    </button>
     <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
     <button class="menu-btn" id="menuBtn">☰</button>
   </div>
@@ -20,7 +24,9 @@
     <a href="index.html">الرئيسية</a>
     <a href="products.html" class="active">المنتجات</a>
     <a href="community.html">المنتدى</a>
+    <a href="explanations.html">💡 الشروحات</a>
     <a href="chat.html">المحادثات 💬</a>
+    <a href="orders.html" id="ordersNavBtn" style="display:none; color: #42d6a0;">📋 الطلبات</a>
   </nav>
 </header>
 
@@ -43,7 +49,6 @@
     <button class="filter" data-cat="cables">كابلات</button>
   </div>
 
-  <!-- خانة البحث في المنتجات (بالاسم، الوصف، السعر) -->
   <div style="margin: 20px 0; max-width: 600px; margin-left: auto; margin-right: auto;">
     <input type="text" id="productSearchInput" placeholder="🔍 ابحث بالاسم، الوصف، أو السعر..." oninput="filterProductsSearch()" style="width: 100%; padding: 12px; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
   </div>
@@ -51,12 +56,36 @@
   <div class="products" id="productsGrid"></div>
 </main>
 
+<!-- نافذة سلة المشتريات المنبثقة (Cart Modal) -->
+<div id="cartModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
+  <div style="background: #1c2541; width: 90%; max-width: 500px; border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); max-height: 90vh; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 15px;">
+      <h3 style="margin: 0; color: #20a4ff;">🛒 سلة المشتريات المختارة</h3>
+      <button onclick="toggleCartModal()" style="background: #e63946; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer;">✕ إغلاق</button>
+    </div>
+    
+    <div id="cartItemsList" style="margin-bottom: 15px;">
+      <!-- المنتجات المضافة ستظهر هنا -->
+    </div>
+
+    <!-- نموذج تأكيد الطلب (العنوان ورقم الموبايل) -->
+    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+      <h4 style="margin-top: 0; color: #fff;">📍 بيانات الشحن والتوصيل</h4>
+      <input type="text" id="orderPhone" placeholder="رقم الموبايل للتواصل" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; box-sizing: border-box;">
+      <textarea id="orderAddress" placeholder="العنوان بالتفصيل (المحافظة، الشارع، رقم الحلم، العمارة)..." style="width: 100%; padding: 10px; margin-bottom: 15px; background: #0b132b; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; box-sizing: border-box; height: 80px;"></textarea>
+      
+      <button onclick="submitOrder()" style="width: 100%; background: #2a9d8f; color: #fff; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">✅ تأكيد الطلب</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <footer>Under the management of Eng. Ahmed El Dahrawy</footer>
 <script src="app.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     if(typeof renderProducts === 'function') renderProducts();
+    if(typeof updateCartCount === 'function') updateCartCount();
   });
 </script>
 </body>
