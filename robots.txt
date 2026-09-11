@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://eldahrawytech-collab.github.io/af-tech/sitemap.xml
