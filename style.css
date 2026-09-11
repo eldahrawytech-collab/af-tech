@@ -44,3 +44,12 @@ footer { text-align: center; padding: 20px; background: #050d18; border-top: 1px
   nav { display: none; position: absolute; top: 60px; right: 0; left: 0; background: #07111f; flex-direction: column; padding: 20px; border-bottom: 1px solid #18304a; }
   .menu-btn { display: block; }
 }
+/* ضبط حاوية الصور داخل المنتجات لتظهر بالكامل بدون قص */
+.products img, .card img {
+    object-fit: contain !important;
+    width: 100%;
+    height: 180px; /* يمكنك تعديل الارتفاع حسب ما يناسبك */
+    background-color: #071522; /* لون خلفية يملأ الفراغات لو الصورة مربعة أو مستطيلة */
+    padding: 5px; /* مسافة بسيطة حول الصورة */
+}
+
