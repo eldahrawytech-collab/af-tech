@@ -442,17 +442,25 @@ function listenToNewMessages() {
 // --- 8. قسم الشروحات والملفات والبرامج ---
 // ==========================================
 
-// دالة تحويل روابط يوتيوب العادية إلى روابط Embed لتعرض الفيديو مباشرة على المنصة
+// دالة تحويل روابط يوتيوب (العادية، القصيرة، وشورتس) إلى روابط Embed
 function getYoutubeEmbedUrl(url) {
   if (!url) return null;
   let videoId = '';
-  if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1]?.split('?')[0];
+  
+  url = url.trim();
+
+  if (url.includes('shorts/')) {
+    videoId = url.split('shorts/')[1]?.split('?')[0]?.split('&')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0];
   } else if (url.includes('watch?v=')) {
     videoId = url.split('watch?v=')[1]?.split('&')[0];
   } else if (url.includes('embed/')) {
-    videoId = url.split('embed/')[1]?.split('?')[0];
+    videoId = url.split('embed/')[1]?.split('?')[0]?.split('&')[0];
+  } else if (url.length === 11) {
+    videoId = url;
   }
+  
   return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
 }
 
@@ -472,7 +480,8 @@ async function renderExplanationsPage() {
     return;
   }
 
-  const searchInput = document.getElementById('explanationSearchInput');
+  // تم تصحيح المعرف هنا ليطابق حقل البحث بدقة
+  const searchInput = document.getElementById('explanationsSearchInput');
   let filtered = explanations || [];
 
   if (searchInput && searchInput.value.trim() !== '') {
@@ -496,7 +505,7 @@ async function renderExplanationsPage() {
       <article class="card" style="background: #1c2541; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 15px;">
         <div>
           ${embedUrl ? `
-            <div style="position: relative; width: 100%; height: 200px; margin-bottom: 12px; border-radius: 8px; overflow: hidden;">
+            <div style="position: relative; width: 100%; height: 350px; margin-bottom: 12px; border-radius: 8px; overflow: hidden;">
               <iframe src="${embedUrl}" style="width: 100%; height: 100%; border:0;" allowfullscreen></iframe>
             </div>
           ` : item.image_url ? `
