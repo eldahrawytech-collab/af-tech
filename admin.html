@@ -8,22 +8,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // حماية الصفحة والتحقق من كلمة المرور عبر قاعدة البيانات آمنياً
-    async function protectPage() {
+    const ADMIN_PASS = "05082026AF";
+
+    function protectPage() {
       if (sessionStorage.getItem('admin_authenticated') === 'true') return;
       let entered = prompt('🔐 هذه الصفحة محمية خاصة بالأدمن، يرجى إدخال رمز المرور:');
       if (!entered) { window.location.href = 'index.html'; return; }
-
-      // جلب كلمة المرور المخفية من قاعدة البيانات Supabase (جدول settings)
-      const SUPABASE_URL = 'https://kcwtnkibuebfzmhhzzly.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_yfEafZ_h2inFrY_F6FZABg_VA4jp2oc';
-      const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      const { data, error } = await _supabase.from('settings').select('value').eq('key', 'admin_password').single();
-      
-      const adminPass = data ? data.value : '05082026AF'; // قيمة افتراضية كاحتياط
-
-      if (entered.trim() === adminPass) {
+      if (entered.trim() === ADMIN_PASS) {
         sessionStorage.setItem('admin_authenticated', 'true');
         alert('✅ تم التحقق بنجاح');
       } else {
@@ -57,7 +48,6 @@
     .select-role { background: #0b132b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 6px; }
     .btn-ban { background-color: #e63946; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
     .btn-unban { background-color: #2a9d8f; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
-    .btn-delete { background-color: #d90429; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
     #toast { position: fixed; bottom: 20px; right: 20px; background-color: #333; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
   </style>
 </head>
@@ -74,26 +64,26 @@
 
   <div class="container">
     <div class="card">
-      <h2>مرحباً بك يا مهندس أحمد (الأدمن)</h2>
-      <p>من هذه اللوحة يمكنك التحكم بالأعضاء (حظر أو مسح)، المنتجات، وإضافة أو تعديل وحذف الشروحات وملفات التحميل.</p>
+      <h2>مرحباً بك يا مهندس أحمد (الأدمن)[span_0](start_span)[span_0](end_span)</h2>
+      <p>من هذه اللوحة يمكنك التحكم بالأعضاء، المنتجات، وإضافة أو تعديل وحذف الشروحات وملفات التحميل وبرامج الكمبيوتر وفيديوهات اليوتيوب[span_1](start_span)[span_1](end_span).</p>
     </div>
 
     <!-- إدارة أعضاء الموقع -->
     <div class="card">
-      <h3>👥 إدارة أعضاء الموقع والصلاحيات</h3>
+      <h3>👥 إدارة أعضاء الموقع والصلاحيات[span_2](start_span)[span_2](end_span)</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
             <tr>
-              <th>الاسم الحقيقي</th>
-              <th>رقم الموبايل</th>
-              <th>الرتبة</th>
-              <th>الحالة</th>
-              <th>الإجراءات</th>
+              <th>الاسم الحقيقي[span_3](start_span)[span_3](end_span)</th>
+              <th>رقم الموبايل[span_4](start_span)[span_4](end_span)</th>
+              <th>الرتبة[span_5](start_span)[span_5](end_span)</th>
+              <th>الحالة[span_6](start_span)[span_6](end_span)</th>
+              <th>الإجراءات[span_7](start_span)[span_7](end_span)</th>
             </tr>
           </thead>
           <tbody id="usersTableBody">
-            <tr><td colspan="5" style="text-align:center;">جاري تحميل الأعضاء...</td></tr>
+            <tr><td colspan="5" style="text-align:center;">جاري تحميل الأعضاء...[span_8](start_span)[span_8](end_span)</td></tr>
           </tbody>
         </table>
       </div>
@@ -101,48 +91,48 @@
 
     <!-- نموذج إضافة أو تعديل منتج -->
     <div class="card">
-      <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
+      <h3 id="productFormTitle">➕ إضافة منتج جديد[span_9](start_span)[span_9](end_span)</h3>
       <input type="hidden" id="editProductId">
-      <input type="text" id="pName" placeholder="اسم المنتج">
+      <input type="text" id="pName" placeholder="اسم المنتج[span_10](start_span)[span_10](end_span)">
       <select id="pCategory">
-        <option value="receivers">ريسيفرات</option>
-        <option value="dish">مستلزمات الدش</option>
-        <option value="electrical">أجهزة كهربائية</option>
-        <option value="pos">سيستم حسابات و منيو إلكتروني</option>
-        <option value="printers">مستلزمات كمبيوتر و إنترنت</option>
-        <option value="computers">فنيين و موارد بشرية</option>
-        <option value="cameras">كاميرات</option>
-        <option value="screens">سبيكرات</option>
-        <option value="cables">كابلات</option>
-        <option value="hardware">هاردوير وأجهزة</option>
-        <option value="mobiles">الموبايلات</option>
-        <option value="networks">الشبكات</option>
+        <option value="receivers">ريسيفرات[span_11](start_span)[span_11](end_span)</option>
+        <option value="dish">مستلزمات الدش[span_12](start_span)[span_12](end_span)</option>
+        <option value="electrical">أجهزة كهربائية[span_13](start_span)[span_13](end_span)</option>
+        <option value="pos">سيستم حسابات و منيو إلكتروني[span_14](start_span)[span_14](end_span)</option>
+        <option value="printers">مستلزمات كمبيوتر و إنترنت[span_15](start_span)[span_15](end_span)</option>
+        <option value="computers">فنيين و موارد بشرية[span_16](start_span)[span_16](end_span)</option>
+        <option value="cameras">كاميرات[span_17](start_span)[span_17](end_span)</option>
+        <option value="screens">سبيكرات[span_18](start_span)[span_18](end_span)</option>
+        <option value="cables">كابلات[span_19](start_span)[span_19](end_span)</option>
+        <option value="hardware">هاردوير وأجهزة[span_20](start_span)[span_20](end_span)</option>
+        <option value="mobiles">الموبايلات[span_21](start_span)[span_21](end_span)</option>
+        <option value="networks">الشبكات[span_22](start_span)[span_22](end_span)</option>
       </select>
-      <input type="text" id="pPrice" placeholder="السعر (مثال: 500 جنيه)">
-      <textarea id="pDesc" placeholder="تفاصيل المنتج..."></textarea>
-      <label style="font-size:13px; color:#a0aec0;">إرفاق صورة:</label>
+      <input type="text" id="pPrice" placeholder="السعر (مثال: 500 جنيه)[span_23](start_span)[span_23](end_span)">
+      <textarea id="pDesc" placeholder="تفاصيل المنتج...[span_24](start_span)[span_24](end_span)"></textarea>
+      <label style="font-size:13px; color:#a0aec0;">إرفاق صورة:[span_25](start_span)[span_25](end_span)</label>
       <input type="file" id="pImageFile" accept="image/*">
       <br><br>
-      <button class="action-btn" onclick="saveProduct()">حفظ ونشر المنتج</button>
-      <button id="cancelEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetProductForm()">إلغاء التعديل</button>
+      <button class="action-btn" onclick="saveProduct()">حفظ ونشر المنتج[span_26](start_span)[span_26](end_span)</button>
+      <button id="cancelEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetProductForm()">إلغاء التعديل[span_27](start_span)[span_27](end_span)</button>
     </div>
 
     <!-- إدارة المنتجات -->
     <div class="card">
-      <h3>📦 إدارة المنتجات</h3>
+      <h3>📦 إدارة المنتجات[span_28](start_span)[span_28](end_span)</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
             <tr>
-              <th>الصورة</th>
-              <th>الاسم</th>
-              <th>القسم</th>
-              <th>السعر</th>
-              <th>الإجراءات</th>
+              <th>الصورة[span_29](start_span)[span_29](end_span)</th>
+              <th>الاسم[span_30](start_span)[span_30](end_span)</th>
+              <th>القسم[span_31](start_span)[span_31](end_span)</th>
+              <th>السعر[span_32](start_span)[span_32](end_span)</th>
+              <th>الإجراءات[span_33](start_span)[span_33](end_span)</th>
             </tr>
           </thead>
           <tbody id="adminProductsList">
-            <tr><td colspan="5" style="text-align:center;">جاري التحميل...</td></tr>
+            <tr><td colspan="5" style="text-align:center;">جاري التحميل...[span_34](start_span)[span_34](end_span)</td></tr>
           </tbody>
         </table>
       </div>
@@ -150,34 +140,34 @@
 
     <!-- نموذج إضافة أو تعديل شرح / ملف / فيديو يوتيوب -->
     <div class="card">
-      <h3 id="explanationFormTitle">💡 إضافة شرح أو ملف / برنامج جديد</h3>
+      <h3 id="explanationFormTitle">💡 إضافة شرح أو ملف / برنامج جديد[span_35](start_span)[span_35](end_span)</h3>
       <input type="hidden" id="editExplanationId">
-      <input type="text" id="eTitle" placeholder="عنوان الشرح أو البرنامج">
-      <textarea id="eDesc" placeholder="تفاصيل الشرح أو تعليمات الاستخدام..."></textarea>
-      <input type="text" id="eYoutubeUrl" placeholder="رابط فيديو يوتيوب">
-      <input type="text" id="eFileUrl" placeholder="رابط تحميل الملف أو البرنامج">
-      <label style="font-size:13px; color:#a0aec0;">أو إرفاق صورة مصغرة للشرح:</label>
+      <input type="text" id="eTitle" placeholder="عنوان الشرح أو البرنامج (مثال: أحدث ملف قنوات نايل سات أو برنامج تفعيل)[span_36](start_span)[span_36](end_span)">
+      <textarea id="eDesc" placeholder="تفاصيل الشرح أو تعليمات الاستخدام...[span_37](start_span)[span_37](end_span)"></textarea>
+      <input type="text" id="eYoutubeUrl" placeholder="رابط فيديو يوتيوب (مثال: https://www.youtube.com/watch?v=...)[span_38](start_span)[span_38](end_span)">
+      <input type="text" id="eFileUrl" placeholder="رابط تحميل الملف أو البرنامج (مثل رابط مباشر، ميديافاير، أو ملف قنوات)[span_39](start_span)[span_39](end_span)">
+      <label style="font-size:13px; color:#a0aec0;">أو إرفاق صورة مصغرة للشرح:[span_40](start_span)[span_40](end_span)</label>
       <input type="file" id="eImageFile" accept="image/*">
       <br><br>
-      <button class="action-btn" onclick="saveExplanation()">حفظ ونشر الشرح</button>
-      <button id="cancelExplanationEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetExplanationForm()">إلغاء التعديل</button>
+      <button class="action-btn" onclick="saveExplanation()">حفظ ونشر الشرح[span_41](start_span)[span_41](end_span)</button>
+      <button id="cancelExplanationEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetExplanationForm()">إلغاء التعديل[span_42](start_span)[span_42](end_span)</button>
     </div>
 
     <!-- جدول إدارة الشروحات والملفات -->
     <div class="card">
-      <h3>📚 إدارة الشروحات والملفات والبرامج المنشورة</h3>
+      <h3>📚 إدارة الشروحات والملفات والبرامج المنشورة[span_43](start_span)[span_43](end_span)</h3>
       <div style="overflow-x: auto;">
         <table>
           <thead>
             <tr>
-              <th>العنوان</th>
-              <th>فيديو يوتيوب</th>
-              <th>ملف التحميل</th>
-              <th>الإجراءات</th>
+              <th>العنوان[span_44](start_span)[span_44](end_span)</th>
+              <th>فيديو يوتيوب[span_45](start_span)[span_45](end_span)</th>
+              <th>ملف التحميل[span_46](start_span)[span_46](end_span)</th>
+              <th>الإجراءات[span_47](start_span)[span_47](end_span)</th>
             </tr>
           </thead>
           <tbody id="adminExplanationsList">
-            <tr><td colspan="4" style="text-align:center;">جاري التحميل...</td></tr>
+            <tr><td colspan="4" style="text-align:center;">جاري التحميل...[span_48](start_span)[span_48](end_span)</td></tr>
           </tbody>
         </table>
       </div>
