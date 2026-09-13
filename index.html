@@ -205,27 +205,53 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+  #adsTickerContainer {
+    width: 100%;
+    box-sizing: border-box;
+  }
   #adsTickerContainer:hover #adsTrack {
     animation-play-state: paused; /* إيقاف الحركة عند وقوف الماوس لقراءة الإعلان */
   }
   .ad-badge-card {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(5, 12, 20, 0.8);
+    gap: 10px;
+    background: rgba(5, 12, 20, 0.85);
     border: 1px solid rgba(32, 164, 255, 0.3);
-    padding: 8px 18px;
+    padding: 6px 14px;
     border-radius: 50px;
     color: #fff;
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     transition: transform 0.2s;
+    white-space: nowrap;
+    font-size: 13px;
   }
   .ad-badge-card:hover {
     transform: scale(1.03);
     border-color: #20a4ff;
   }
+
+  /* تحسينات خاصة لشاشات الموبايل لضمان سلاسة وحجم مناسب */
+  @media (max-width: 768px) {
+    #adsTickerContainer {
+      padding: 8px 0;
+    }
+    #adsTrack {
+      animation: scrollAds 18s linear infinite; /* سرعة أبطأ قليلاً أو تناسب الشاشات الصغرى */
+      gap: 20px;
+    }
+    .ad-badge-card {
+      padding: 5px 12px;
+      font-size: 12px;
+    }
+    .ad-badge-card img {
+      width: 28px !important;
+      height: 28px !important;
+    }
+  }
 </style>
+
 
 
     <section id="services" class="section">
