@@ -1370,10 +1370,12 @@ function handleAdClick(title, phone, link) {
       <div class="contact-box">
         <h4>${title}</h4>
         <p>رقم الهاتف: <a href="tel:${phone}">${phone}</a></p>
-        ${link ? `<a href="${link}" target="_blank">رابط الإعلان</a>` : ''}
+        ${link && link.trim() !== '' ? `<a href="${link}" target="_blank">رابط الإعلان</a>` : ''}
       </div>
     `;
   }
+}
+
   
   if (link && link.trim() !== '') {
     window.open(link, '_blank');
