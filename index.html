@@ -205,49 +205,68 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+
+  /* حاوية الشريط الرئيسية */
   #adsTickerContainer {
-    width: 100%;
+    width: 100% !important;
+    background: linear-gradient(90deg, #0b192c, #1e3a5f);
+    padding: 10px 0;
+    border-bottom: 2px solid #20a4ff;
+    border-top: 1px solid rgba(32, 164, 255, 0.2);
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    display: block !important; /* ضمان الظهور الإجباري على الموبايل والديسك توب */
     box-sizing: border-box;
+    z-index: 10;
   }
+
   #adsTickerContainer:hover #adsTrack {
-    animation-play-state: paused; /* إيقاف الحركة عند وقوف الماوس لقراءة الإعلان */
+    animation-play-state: paused;
   }
+
+  /* المسار المتحرك */
+  #adsTrack {
+    display: inline-flex;
+    gap: 15px;
+    align-items: center;
+    animation: scrollAds 22s linear infinite;
+    width: max-content;
+  }
+
+  /* كارت الإعلان الفردي */
   .ad-badge-card {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(5, 12, 20, 0.85);
-    border: 1px solid rgba(32, 164, 255, 0.3);
+    gap: 8px;
+    background: rgba(5, 12, 20, 0.9);
+    border: 1px solid rgba(32, 164, 255, 0.4);
     padding: 6px 14px;
     border-radius: 50px;
     color: #fff;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    transition: transform 0.2s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     white-space: nowrap;
     font-size: 13px;
+    flex-shrink: 0;
   }
+
   .ad-badge-card:hover {
-    transform: scale(1.03);
     border-color: #20a4ff;
   }
 
-  /* تحسينات خاصة لشاشات الموبايل لضمان سلاسة وحجم مناسب */
+  /* تعديلات وتجاوب الشاشات الصغيرة للموبايل */
   @media (max-width: 768px) {
     #adsTickerContainer {
       padding: 8px 0;
     }
     #adsTrack {
-      animation: scrollAds 18s linear infinite; /* سرعة أبطأ قليلاً أو تناسب الشاشات الصغرى */
-      gap: 20px;
+      animation: scrollAds 16s linear infinite; /* سرعة مناسبة للموبايل */
+      gap: 12px;
     }
     .ad-badge-card {
       padding: 5px 12px;
       font-size: 12px;
-    }
-    .ad-badge-card img {
-      width: 28px !important;
-      height: 28px !important;
     }
   }
 </style>
