@@ -1,76 +1,282 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AF-Tech | المحادثات والدعم الفني</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدعم الفني والرسائل - AF Tech</title>
+  
+  <!-- مكتبة Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    .chat-container { display: grid; grid-template-columns: 320px 1fr; gap: 20px; height: 75vh; margin-top: 20px; }
-    .chat-users { background: #0d2033; border: 1px solid #1d3d57; border-radius: 16px; padding: 15px; overflow-y: auto; }
-    .user-item { padding: 12px; border-radius: 10px; background: #071522; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-    .user-item:hover, .user-item.active { border-color: #168fe0; background: rgba(22, 143, 224, 0.1); }
-    .chat-box { background: #0d2033; border: 1px solid #1d3d57; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
-    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .msg { max-width: 75%; padding: 12px 16px; border-radius: 14px; line-height: 1.5; font-size: 14px; }
-    .msg.me { align-self: flex-start; background: #168fe0; color: #fff; border-bottom-right-radius: 2px; }
-    .msg.other { align-self: flex-end; background: #071522; color: #eef6ff; border: 1px solid #1d3d57; border-bottom-left-radius: 2px; }
-    .chat-input { display: flex; gap: 10px; padding: 15px; background: #0b1a2b; border-top: 1px solid #1d3d57; }
-    .chat-input input { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #24475f; background: #071522; color: #fff; font-family: inherit; }
-    @media (max-width: 768px) { .chat-container { grid-template-columns: 1fr; height: auto; } }
+    :root {
+      --bg-color: #071522;
+      --card-bg: #0b192c;
+      --border-color: #1e3a5f;
+      --primary-color: #20a4ff;
+      --text-color: #ffffff;
+      --text-muted: #8fa7ba;
+      --danger-color: #e63946;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+    }
+
+    header {
+      background: #050c14;
+      border-bottom: 1px solid var(--border-color);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--primary-color);
+    }
+
+    header a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    header a:hover {
+      color: var(--primary-color);
+    }
+
+    .main-wrapper {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    /* تخطيط الشات */
+    .chat-container {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      height: 75vh;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    /* قائمة العملاء (للأدمن والمشرفين والمهندسين) */
+    .chat-users-list {
+      background: #050c14;
+      border-left: 1px solid var(--border-color);
+      overflow-y: auto;
+      padding: 10px;
+      display: none; /* يتم إظهارها برمجياً إذا كان المستخدم موظف/أدمن */
+    }
+
+    .chat-users-list h3 {
+      font-size: 15px;
+      margin: 10px 5px 15px 5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .user-item {
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 6px;
+      background: rgba(255,255,255,0.02);
+      transition: background 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .user-item:hover {
+      background: rgba(32, 164, 255, 0.08);
+    }
+
+    .user-item.active {
+      background: rgba(32, 164, 255, 0.15);
+      border-color: var(--primary-color);
+    }
+
+    /* صندوق الرسائل والمحادثة */
+    .chat-box {
+      display: flex;
+      flex-direction: column;
+      background: var(--card-bg);
+      height: 100%;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .msg {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      word-break: break-word;
+    }
+
+    .msg.me {
+      background: #1d3d57;
+      align-self: flex-end;
+      border-top-left-radius: 2px;
+    }
+
+    .msg.other {
+      background: #0f2537;
+      align-self: flex-start;
+      border-top-right-radius: 2px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* شريط إدخال الرسائل */
+    .chat-input {
+      padding: 15px;
+      background: #050c14;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      background: #0b192c;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .chat-input input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s;
+    }
+
+    .btn.primary {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    /* إشعارات الـ Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: none;
+      z-index: 9999;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    @media (max-width: 768px) {
+      .chat-container {
+        grid-template-columns: 1fr;
+        height: 80vh;
+      }
+      .chat-users-list {
+        max-height: 150px;
+      }
+    }
   </style>
 </head>
 <body>
 
-<header class="topbar">
-  <a class="brand" href="index.html"><span>AF</span>-Tech</a>
-  <div style="display: flex; align-items: center; gap: 15px;">
-    <a href="auth.html" class="btn primary" id="authBtn">تسجيل الدخول</a>
-    <button class="menu-btn" id="menuBtn">☰</button>
-  </div>
-  <nav id="nav">
-    <a href="index.html">الرئيسية</a>
-    <a href="products.html">المنتجات</a>
-    <a href="community.html">المنتدى</a>
-    <a href="chat.html" class="active">المحادثات 💬</a>
-  </nav>
-</header>
+  <!-- الترويسة -->
+  <header>
+    <h1 id="chatPageTitle">الدعم الفني المباشر</h1>
+    <a href="index.html">← العودة للرئيسية</a>
+  </header>
 
-<main class="section">
-  <div class="section-head">
-    <p class="eyebrow">الدعم المباشر</p>
-    <h2 id="chatPageTitle">محادثات الدعم الفني</h2>
-  </div>
-
-  <div class="chat-container">
-    <!-- قائمة العملاء تظهر فقط للأدمن والمشرفين -->
-    <div class="chat-users" id="chatUsersList" style="display: none;">
-      <h4 style="margin-top:0; color:#20a4ff;">👥 قائمة العملاء:</h4>
-      <div id="usersListContainer">جاري التحميل...</div>
-    </div>
-
-    <!-- صندوق المحادثة -->
-    <div class="chat-box">
-      <div class="chat-messages" id="chatMessages">
-        <p style="text-align:center; color:#8fa7ba; padding: 20px;">جاري تحميل المحادثة...</p>
+  <!-- المحتوى الرئيسي -->
+  <div class="main-wrapper">
+    <div class="chat-container">
+      
+      <!-- قائمة العملاء (تظهر للموظفين/الأدمن فقط) -->
+      <div class="chat-users-list" id="chatUsersList">
+        <h3>👥 العملاء</h3>
+        <div id="usersListContainer">
+          <p style="color:var(--text-muted); text-align:center; font-size:13px;">جاري التحميل...</p>
+        </div>
       </div>
-      <div class="chat-input">
-        <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-        <button class="btn primary" onclick="sendChatMessage()">إرسال</button>
+
+      <!-- صندوق المحادثة والرسائل -->
+      <div class="chat-box">
+        
+        <!-- الشريط العلوي الخاص بإجراءات الأدمن (مثل زر مسح الشات بالكامل) -->
+        <div id="chatTopBar" style="padding: 10px 15px; background: #071522; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px; color: var(--text-muted);">سجل المحادثة المباشرة</span>
+          <!-- يظهر هذا الزر حصرياً للأدمن الرئيسي المحدد في app.js -->
+          <button id="clearChatBtn" onclick="clearFullChat()" style="background: var(--danger-color); color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; display: none; font-family: inherit;">
+            🗑️ مسح الشات بالكامل
+          </button>
+        </div>
+
+        <!-- رسائل الشات -->
+        <div class="chat-messages" id="chatMessages">
+          <p style="text-align:center; color:var(--text-muted); padding: 20px;">جاري تحميل المحادثة...</p>
+        </div>
+
+        <!-- حقل الكتابة -->
+        <div class="chat-input">
+          <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+          <button class="btn primary" onclick="sendChatMessage()">إرسال</button>
+        </div>
+
       </div>
     </div>
   </div>
-</main>
 
-<div id="toast"></div>
-<footer>Under the management of Eng. Ahmed El Dahrawy</footer>
-<script src="app.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    if(typeof initChatSystem === 'function') initChatSystem();
-  });
-</script>
+  <!-- عنصر التنبيهات (Toast) -->
+  <div id="toast"></div>
+
+  <!-- ملف المنطق البرمجي الرئيسي -->
+  <script src="app.js"></script>
+  <script>
+    // تفعيل نظام الشات فور اكتمال تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+      initChatSystem();
+    });
+  </script>
 </body>
 </html>
