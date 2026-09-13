@@ -1332,6 +1332,7 @@ function showToast(t) {
   clearTimeout(window.tt);
   window.tt = setTimeout(() => (x.style.display = 'none'), 3000);
 }
+
 // --- دوال نظام الإعلانات المتحركة ---
 
 // 1. جلب وعرض الإعلانات في الصفحة الرئيسية بشكل متحرك وسلس
@@ -1343,58 +1344,71 @@ async function loadPublicAds() {
   const { data: ads, error } = await _supabase.from('ads').select('*').order('created_at', { ascending: false });
 
   if (error || !ads || ads.length === 0) {
-    container.style.display = 'none'; // لو مفيش أي إعلانات متظهرش للصفحة نهائياً
+    container.style.display = 'none'; 
     return;
   }
 
   container.style.display = 'block';
 
-  // تكرار العناصر مرتين لعمل حركة سلسة ومتواصلة (Infinite Loop)
+  // تم تمرير الحدث (event) لدالة الضغط لتحديد موقع المستخدم بدقة
   const adsHtml = ads.map(ad => `
-    <div class="ad-badge-card" onclick="handleAdClick('${escapeHtml(ad.title)}', '${escapeHtml(ad.phone || '')}', '${escapeHtml(ad.link_url || '')}')">
+    <div class="ad-badge-card" onclick="handleAdClick(event, '${escapeHtml(ad.title)}', '${escapeHtml(ad.phone || '')}', '${escapeHtml(ad.link_url || '')}')">
       ${ad.image_url ? `<img src="${ad.image_url}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : '📢'}
       <span style="font-weight: bold; font-size: 14px;">${escapeHtml(ad.title)}</span>
     </div>
   `).join('');
 
-  track.innerHTML = adsHtml + adsHtml; // تكرار لمضاعفة الشريط وتحقيق السلاسة
+  track.innerHTML = adsHtml + adsHtml; 
 }
 
-// 2. نافذة التواصل عند الضغط على الإعلان
-function handleAdClick(title, phone, link) {
-  // إذا لم يتم إدخال رقم تليفون أو لينك، لا تظهر نافذة التواصل وتكتفي بتوجيهه لو في لينك
+// 2. نافذة التواصل عند الضغط على الإعلان (تظهر عند مكان الضغط)
+function handleAdClick(event, title, phone, link) {
+  if (event) {
+    event.stopPropagation();
+  }
+
   if (!phone && !link) {
     showToast(`📢 ${title}`);
     return;
   }
 
   if (link && link.trim() !== '') {
-    // لو فيه لينك، ممكن تفتحه أو تعرض خيارات التواصل
     window.open(link, '_blank');
   }
 
   if (phone && phone.trim() !== '') {
-    showAdContactModal(title, phone);
+    const posX = event ? event.clientX : window.innerWidth / 2;
+    const posY = event ? event.clientY : window.innerHeight / 2;
+    showAdContactModal(title, phone, posX, posY);
   }
 }
 
-function showAdContactModal(title, phone) {
+function showAdContactModal(title, phone, x, y) {
   let existing = document.getElementById('adContactModal');
   if (existing) existing.remove();
 
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  
+  let leftPos = x;
+  let topPos = y;
+
+  if (leftPos > screenWidth - 200) leftPos = screenWidth - 220;
+  if (topPos > screenHeight - 150) topPos = screenHeight - 180;
+
   const modalHtml = `
-    <div class="cart-modal" id="adContactModal" style="display: flex;">
-      <div class="cart-content" style="max-width: 350px; text-align: center;">
-        <div class="cart-header" style="justify-content: center; position: relative;">
-          <h3 style="margin:0; font-size:16px; color:#20a4ff;">📞 تواصل مع صاحب الإعلان</h3>
-          <button class="close-modal" onclick="document.getElementById('adContactModal').remove()" style="position: absolute; left: 0;">✕</button>
+    <div id="adContactModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(0,0,0,0.4);" onclick="this.remove()">
+      <div style="position: absolute; top: ${topPos}px; left: ${leftPos}px; background: #0b192c; border: 1px solid #20a4ff; padding: 15px; border-radius: 12px; width: 280px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transform: translate(-50%, -10px);" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+          <h3 style="margin:0; font-size:14px; color:#20a4ff;">📞 التواصل مع الإعلان</h3>
+          <button onclick="document.getElementById('adContactModal').remove()" style="background:none; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
         </div>
-        <div style="padding: 15px 0;">
-          <p style="font-weight: bold; font-size: 15px; margin-bottom: 10px;">${escapeHtml(title)}</p>
-          <p style="color: #42d6a0; font-size: 16px; margin-bottom: 15px;">رقم التليفون: <strong>${escapeHtml(phone)}</strong></p>
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <a href="tel:${phone}" class="btn primary" style="padding: 8px 15px; text-decoration: none; font-size: 14px;">📞 اتصال مباشر</a>
-            <a href="https://wa.me/${phone.startsWith('0') ? '2' + phone : phone}" target="_blank" class="btn ghost" style="padding: 8px 15px; text-decoration: none; font-size: 14px; background: #25d366; color: #fff; border: none;">💬 واتساب</a>
+        <div style="text-align: center;">
+          <p style="font-weight: bold; font-size: 14px; margin-bottom: 8px; color: #fff;">${escapeHtml(title)}</p>
+          <p style="color: #42d6a0; font-size: 14px; margin-bottom: 12px;"><strong>${escapeHtml(phone)}</strong></p>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <a href="tel:${phone}" class="btn primary" style="padding: 6px 12px; text-decoration: none; font-size: 13px;">📞 اتصال</a>
+            <a href="https://wa.me/${phone.startsWith('0') ? '2' + phone : phone}" target="_blank" style="padding: 6px 12px; text-decoration: none; font-size: 13px; background: #25d366; color: #fff; border-radius: 6px; font-weight: bold;">💬 واتساب</a>
           </div>
         </div>
       </div>
@@ -1501,4 +1515,3 @@ async function deleteAd(id) {
     loadAdminAds();
   }
 }
-
