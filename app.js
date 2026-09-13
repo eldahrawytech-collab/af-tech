@@ -1377,8 +1377,11 @@ function handleAdClick(event, title, phone, link) {
   }
 
   if (phone && phone.trim() !== '') {
-    const posX = event ? event.clientX : window.innerWidth / 2;
-    const posY = event ? event.clientY : window.innerHeight / 2;
+    // الحصول على مكان العنصر الذي تم الضغط عليه بدقة
+    const rect = event.currentTarget.getBoundingClientRect();
+    const posX = rect.left + (rect.width / 2);
+    const posY = rect.top + rect.height; // لتظهر أسفل الإعلان مباشرة أو فوقه حسب الرغبة
+    
     showAdContactModal(title, phone, posX, posY);
   }
 }
@@ -1388,17 +1391,15 @@ function showAdContactModal(title, phone, x, y) {
   if (existing) existing.remove();
 
   const screenWidth = window.innerWidth;
-  const screenHeight = window.innerHeight;
   
+  // ضبط الموضع أفقياً لئلا تخرج النافذة عن حدود الشاشة
   let leftPos = x;
-  let topPos = y;
-
-  if (leftPos > screenWidth - 200) leftPos = screenWidth - 220;
-  if (topPos > screenHeight - 150) topPos = screenHeight - 180;
+  if (leftPos < 140) leftPos = 140;
+  if (leftPos > screenWidth - 140) leftPos = screenWidth - 140;
 
   const modalHtml = `
     <div id="adContactModal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(0,0,0,0.4);" onclick="this.remove()">
-      <div style="position: absolute; top: ${topPos}px; left: ${leftPos}px; background: #0b192c; border: 1px solid #20a4ff; padding: 15px; border-radius: 12px; width: 280px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transform: translate(-50%, -10px);" onclick="event.stopPropagation()">
+      <div style="position: absolute; top: ${y + 10}px; left: ${leftPos}px; background: #0b192c; border: 1px solid #20a4ff; padding: 15px; border-radius: 12px; width: 260px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); transform: translateX(-50%);" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
           <h3 style="margin:0; font-size:14px; color:#20a4ff;">📞 التواصل مع الإعلان</h3>
           <button onclick="document.getElementById('adContactModal').remove()" style="background:none; border:none; color:#fff; cursor:pointer; font-size:16px;">✕</button>
@@ -1416,6 +1417,7 @@ function showAdContactModal(title, phone, x, y) {
   `;
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
+
 
 // 3. حفظ أو تعديل إعلان من لوحة التحكم
 async function saveAdvertisement() {
