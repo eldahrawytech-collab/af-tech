@@ -182,8 +182,44 @@
         </table>
       </div>
     </div>
-
   </div>
+
+
+
+<!-- إدارة الإعلانات المتحركة -->
+<div class="card">
+  <h3 id="adFormTitle">📢 إضافة إعلان متحرك جديد</h3>
+  <input type="hidden" id="editAdId">
+  <input type="text" id="adTitle" placeholder="عنوان أو اسم الإعلان">
+  <input type="text" id="adPhone" placeholder="رقم التليفون للتواصل (اختياري)">
+  <input type="text" id="adLink" placeholder="لينك الإعلان أو الموقع (اختياري)">
+  <label style="font-size:13px; color:#a0aec0;">صورة الإعلان:</label>
+  <input type="file" id="adImageFile" accept="image/*">
+  <br><br>
+  <button class="action-btn" onclick="saveAdvertisement()">حفظ ونشر الإعلان</button>
+  <button id="cancelAdEditBtn" style="display:none; background:#e63946; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;" onclick="resetAdForm()">إلغاء التعديل</button>
+</div>
+
+<div class="card">
+  <h3>📋 جدول الإعلانات الحالية</h3>
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>الصورة</th>
+          <th>الاسم</th>
+          <th>التليفون</th>
+          <th>اللينك</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="adminAdsList">
+        <tr><td colspan="5" style="text-align:center;">جاري تحميل الإعلانات...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 
   <div id="toast"></div>
 
