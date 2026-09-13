@@ -57,7 +57,7 @@ async function checkUser() {
     if (authBtn) {
       let roleBadge = '👤 مستخدم';
       let adminDashboardBtn = '';
-      let ordersNavBtn = '';
+      let ordersNavBtn = ''; 
 
       if (user.id === ADMIN_UID || currentProfile?.role === 'admin') {
         roleBadge = '👑 أدمن';
@@ -335,7 +335,7 @@ function openCheckoutModal() {
             <input type="text" id="orderPhone" placeholder="01012345678" value="${currentProfile?.phone || ''}" style="width: 100%; padding: 10px; background: #050c14; border: 1px solid #1a2d42; color: #fff; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
           </div>
           <div>
-            <label style="font-size: 13px; color: #8fa7ba; display: block; margin-bottom: 5px;">العنوان بالتفصيل (المحافظة، المجاورة، الشارع، الدور):</label>
+            <label style="font-size: 13px; color: #8fa7ba; display: block; margin-bottom: 5px;">العنوان بالتفصيل:</label>
             <textarea id="orderAddress" placeholder="اكتب عنوانك بالتفصيل هنا..." style="width: 100%; padding: 10px; background: #050c14; border: 1px solid #1a2d42; color: #fff; border-radius: 8px; font-size: 14px; height: 90px; box-sizing: border-box; font-family: inherit;"></textarea>
           </div>
         </div>
@@ -463,7 +463,7 @@ async function deleteOrder(orderId) {
 }
 
 // ==========================================
-// --- 7. نظام الشات المطور (مع وظائف مسح الشات والرسائل للأدمن فقط) ---
+// --- 7. نظام الشات المطور ---
 // ==========================================
 
 async function initChatSystem() {
@@ -478,12 +478,6 @@ async function initChatSystem() {
   const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
   if (profile) currentProfile = profile;
 
-  // إظهار زر "مسح الشات بالكامل" للأدمن الرئيسي فقط
-  const clearBtn = document.getElementById('clearChatBtn');
-  if (clearBtn && currentUser.id === ADMIN_UID) {
-    clearBtn.style.display = 'block';
-  }
-
   const isStaff = user.id === ADMIN_UID || currentProfile?.role === 'admin' || currentProfile?.role === 'moderator' || currentProfile?.role === 'technician';
 
   if (isStaff) {
@@ -491,7 +485,7 @@ async function initChatSystem() {
     if (chatUsersList) chatUsersList.style.display = 'block';
     
     const pageTitleElem = document.getElementById('chatPageTitle');
-    if (pageTitleElem) pageTitleElem.innerText = 'محادثات الدعم الفني (لوحة الإدارة والمشرفين والمهندسين)';
+    if (pageTitleElem) pageTitleElem.innerText = 'محادثات الدعم الفني';
 
     await loadChatUsersList();
   } else {
@@ -502,7 +496,7 @@ async function initChatSystem() {
     if (chatContainer) chatContainer.style.gridTemplateColumns = '1fr';
     
     const pageTitleElem = document.getElementById('chatPageTitle');
-    if (pageTitleElem) pageTitleElem.innerText = 'الدعم الفني المباشر (محادثتك مع الإدارة)';
+    if (pageTitleElem) pageTitleElem.innerText = 'الدعم الفني المباشر';
 
     activeChatUserId = ADMIN_UID; 
     await loadChatMessages();
@@ -581,7 +575,7 @@ async function loadChatMessages() {
   }
 
   if (!messages || messages.length === 0) {
-    messagesContainer.innerHTML = '<p style="text-align:center; color:#8fa7ba; padding:20px;">لا توجد رسائل حتى الآن. أرسل رسالة للبدء.</p>';
+    messagesContainer.innerHTML = '<p style="text-align:center; color:#8fa7ba; padding:20px;">لا توجد رسائل حتى الآن.</p>';
     return;
   }
 
@@ -593,8 +587,6 @@ async function loadChatMessages() {
   if (profiles) {
     profiles.forEach(p => { profileMap[p.id] = p; });
   }
-
-  const isMainAdmin = currentUser && currentUser.id === ADMIN_UID;
 
   messagesContainer.innerHTML = uniqueMessages.map(m => {
     let isMe = m.sender_id === currentUser.id;
@@ -620,19 +612,12 @@ async function loadChatMessages() {
 
     const timeStr = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // زر حذف رسالة مفردة يظهر للأدمن فقط
-    const deleteBtnHtml = isMainAdmin ? `
-      <button onclick="deleteChatMessage('${m.id}')" title="حذف الرسالة" style="background: none; border: none; color: #e63946; cursor: pointer; font-size: 12px; padding: 0 4px; margin-right: auto;">
-        🗑️
-      </button>` : '';
-
     return `
       <div class="msg ${isMe ? 'me' : 'other'}" style="display: flex; flex-direction: column;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
           <strong style="font-size: 12px; color: ${isMe ? '#eef6ff' : '#20a4ff'};">
             ${escapeHtml(displayTitle)} ${roleBadgeHtml}
           </strong>
-          ${deleteBtnHtml}
         </div>
         <div style="font-size: 14px; word-break: break-word;">${escapeHtml(m.content)}</div>
         <div style="font-size: 10px; opacity: 0.7; align-self: flex-end; margin-top: 4px;">${timeStr}</div>
@@ -641,41 +626,6 @@ async function loadChatMessages() {
   }).join('');
 
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-// دالة مسح رسالة مفردة (للأدمن فقط)
-async function deleteChatMessage(messageId) {
-  if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
-  
-  const { error } = await _supabase.from('messages').delete().eq('id', messageId);
-  if (error) {
-    showToast('❌ فشل حذف الرسالة: ' + error.message);
-  } else {
-    showToast('✅ تم حذف الرسالة بنجاح');
-    loadChatMessages();
-  }
-}
-
-// دالة مسح الشات بالكامل للعميل النشط (للأدمن فقط)
-async function clearFullChat() {
-  if (!activeChatUserId) {
-    showToast('⚠️ يرجى تحديد العميل أولاً');
-    return;
-  }
-  
-  if (!confirm('⚠️ تحذير: هل أنت متأكد من مسح جميع رسائل هذه المحادثة نهائياً؟')) return;
-
-  const { error } = await _supabase
-    .from('messages')
-    .delete()
-    .or(`and(sender_id.eq.${ADMIN_UID},recipient_id.eq.${activeChatUserId}),and(sender_id.eq.${activeChatUserId},recipient_id.eq.${ADMIN_UID})`);
-
-  if (error) {
-    showToast('❌ فشل مسح الشات: ' + error.message);
-  } else {
-    showToast('✅ تم مسح الشات بالكامل بنجاح');
-    loadChatMessages();
-  }
 }
 
 async function sendChatMessage() {
@@ -751,7 +701,6 @@ function listenToNewMessages() {
 function getYoutubeEmbedUrl(url) {
   if (!url) return null;
   let videoId = '';
-  
   url = url.trim();
 
   if (url.includes('shorts/')) {
@@ -942,7 +891,7 @@ async function deleteExplanation(id) {
   }
 }
 
-// --- 9. منشورات المنتدى والبحث فيها ---
+// --- 9. منشورات المنتدى ---
 async function submitPost() {
   if (!currentUser) {
     const { data: { user } } = await _supabase.auth.getUser();
@@ -1142,7 +1091,7 @@ async function deletePost(postId) {
   renderPublicPosts();
 }
 
-// --- 10. المنتجات والبحث فيها ---
+// --- 10. المنتجات ---
 async function renderProducts(cat = 'all') {
   if (cat !== undefined) currentCategory = cat;
   const grid = document.getElementById('productsGrid');
@@ -1287,6 +1236,7 @@ async function deleteProduct(id) {
   loadAdminProducts();
 }
 
+// --- إدارة الأعضاء (حظر، تعديل رتبة، ومسح العضو) ---
 async function loadAdminUsers() {
   const tableBody = document.getElementById('usersTableBody');
   if (!tableBody) return;
@@ -1315,6 +1265,7 @@ async function loadAdminUsers() {
             <button class="${isBanned ? 'btn-unban' : 'btn-ban'}" onclick="toggleUserBan('${u.id}', ${isBanned})">
               ${isBanned ? 'إلغاء الحظر' : 'حظر الحساب'}
             </button>
+            <button class="btn-delete" onclick="deleteUser('${u.id}')" style="background:#d90429; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; margin-right:5px;">🗑️ مسح العضو</button>
           `}
         </td>
       </tr>
@@ -1324,17 +1275,16 @@ async function loadAdminUsers() {
 
 async function updateUserRole(userId, newRole) {
   showToast('⏳ جاري تحديث الرتبة...');
-  const { data, error } = await _supabase
+  const { error } = await _supabase
     .from('profiles')
     .update({ role: newRole })
     .eq('id', userId);
 
   if (error) {
     showToast('❌ فشل تغيير الرتبة: ' + error.message);
-    console.error('Update Role Error:', error);
     loadAdminUsers();
   } else {
-    showToast('✅ تم تغيير الرتبة بنجاح في قاعدة البيانات');
+    showToast('✅ تم تغيير الرتبة بنجاح');
     loadAdminUsers();
   }
 }
@@ -1346,6 +1296,20 @@ async function toggleUserBan(userId, currentBanState) {
     showToast('❌ خطأ في تنفيذ الحظر: ' + error.message);
   } else {
     showToast(!currentBanState ? '🚫 تم حظر الحساب' : '✅ تم إلغاء الحظر');
+    loadAdminUsers();
+  }
+}
+
+async function deleteUser(userId) {
+  if (!confirm('⚠️ هل أنت متأكد من مسح هذا العضو نهائياً من قاعدة البيانات؟')) return;
+
+  showToast('⏳ جاري مسح العضو...');
+  const { error } = await _supabase.from('profiles').delete().eq('id', userId);
+
+  if (error) {
+    showToast('❌ فشل مسح العضو: ' + error.message);
+  } else {
+    showToast('✅ تم مسح العضو بنجاح');
     loadAdminUsers();
   }
 }
