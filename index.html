@@ -193,6 +193,40 @@
         <a class="btn primary full" href="chat.html">تحدث معنا الآن</a>
       </div>
     </section>
+<!-- قسم شريط الإعلانات المتحركة (يختفي تماماً إذا لم توجد إعلانات) -->
+<div id="adsTickerContainer" style="display: none; background: linear-gradient(90deg, #0b192c, #1e3a5f); padding: 12px 0; border-bottom: 2px solid #20a4ff; overflow: hidden; white-space: nowrap; position: relative;">
+  <div id="adsTrack" style="display: inline-flex; gap: 30px; animation: scrollAds 25s linear infinite;">
+    <!-- سيتم تعبئتها برمجياً -->
+  </div>
+</div>
+
+<style>
+  @keyframes scrollAds {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  #adsTickerContainer:hover #adsTrack {
+    animation-play-state: paused; /* إيقاف الحركة عند وقوف الماوس لقراءة الإعلان */
+  }
+  .ad-badge-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(5, 12, 20, 0.8);
+    border: 1px solid rgba(32, 164, 255, 0.3);
+    padding: 8px 18px;
+    border-radius: 50px;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+  }
+  .ad-badge-card:hover {
+    transform: scale(1.03);
+    border-color: #20a4ff;
+  }
+</style>
+
 
     <section id="services" class="section">
       <div class="section-head"><p class="eyebrow">خدماتنا</p><h2>خدمات AF-Tech</h2></div>
