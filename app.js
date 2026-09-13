@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- 1. التحقق من الحساب وعرض الاسم الحقيقي والشارة وزر لوحة التحكم للأدمن ---
-// --- 1. التحقق من الحساب وعرض الاسم الحقيقي والشارة وزر لوحة التحكم والطلبات للأدمن والمشرف ---
 async function checkUser() {
   const { data: { user } } = await _supabase.auth.getUser();
   const authBtn = document.getElementById('authBtn');
@@ -58,9 +57,8 @@ async function checkUser() {
     if (authBtn) {
       let roleBadge = '👤 مستخدم';
       let adminDashboardBtn = '';
-      let ordersNavBtn = ''; // زر الطلبات الخاص بالأدمن والمشرف فقط
+      let ordersNavBtn = '';
 
-      // التحقق مما إذا كان المستخدم أدمن أو مشرف لإظهار زر الطلبات ولوحة التحكم
       if (user.id === ADMIN_UID || currentProfile?.role === 'admin') {
         roleBadge = '👑 أدمن';
         adminDashboardBtn = `<a href="admin.html" style="background: #20a4ff; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-left: 5px;">⚙️ لوحة التحكم</a>`;
@@ -70,7 +68,6 @@ async function checkUser() {
         ordersNavBtn = `<a href="orders.html" style="background: #2a9d8f; color: #fff; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; margin-left: 5px;">📋 الطلبات</a>`;
       } else if (currentProfile?.role === 'technician') {
         roleBadge = '🔧 مهندس';
-        // المهندس لن يظهر له زر الطلبات أو لوحة التحكم هنا
       }
 
       const displayName = currentProfile?.full_name || user.user_metadata?.full_name || 'أحمد مصطفى';
@@ -93,7 +90,6 @@ async function checkUser() {
     }
   }
 }
-
 
 // --- 2. تسجيل الخروج ---
 async function handleLogout() {
@@ -219,7 +215,7 @@ async function handleLogin(e) {
 }
 
 // ==========================================
-// --- نظام سلة المشتريات العائمة (إضافات جديدة) ---
+// --- نظام سلة المشتريات العائمة ---
 // ==========================================
 
 function addToCart(name, price) {
@@ -302,15 +298,12 @@ function toggleCartModal() {
   }
 }
 
-// --- تعديل وتطوير نظام إتمام الطلب ---
-
 function checkoutCart() {
   if (cart.length === 0) {
     showToast('⚠️ السلة فارغة!');
     return;
   }
 
-  // 1. التحقق مما إذا كان المستخدم مسجل الدخول أم لا
   if (!currentUser) {
     showToast('⚠️ يجب تسجيل الدخول أولاً لإتمام الطلب');
     setTimeout(() => {
@@ -319,12 +312,10 @@ function checkoutCart() {
     return;
   }
 
-  // 2. إغلاق سلة المشتريات وفتح نافذة إدخال بيانات الشحن (رقم الموبايل والعنوان)
   toggleCartModal();
   openCheckoutModal();
 }
 
-// فتح نافذة إدخال بيانات التوصيل
 function openCheckoutModal() {
   let existingModal = document.getElementById('checkoutDataModal');
   if (existingModal) {
@@ -358,7 +349,6 @@ function openCheckoutModal() {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
-// تأكيد وإرسال تفاصيل الأوردر إلى قاعدة البيانات
 async function submitFinalOrder() {
   const phoneInput = document.getElementById('orderPhone');
   const addressInput = document.getElementById('orderAddress');
@@ -384,14 +374,13 @@ async function submitFinalOrder() {
   let userName = currentProfile?.full_name || currentUser.user_metadata?.full_name || 'مستخدم';
   let accountPhone = currentProfile?.phone || currentUser.user_metadata?.phone || '';
 
-  // تجهيز بيانات الطلب للإرسال
   const orderData = {
     user_id: currentUser.id,
     user_name: userName,
     account_phone: accountPhone,
     phone: phone,
     address: address,
-    items: cart, // تخزين المنتجات (اسم، سعر، كمية)
+    items: cart,
     total: `${totalPrice} جنيه`,
     created_at: new Date().toISOString()
   };
@@ -404,7 +393,6 @@ async function submitFinalOrder() {
   } else {
     showToast('✅ تم إرسال طلبك بنجاح!');
     
-    // إغلاق نافذة البيانات، تفريغ السلة وتحديث الواجهة
     const modal = document.getElementById('checkoutDataModal');
     if (modal) modal.remove();
     
@@ -417,7 +405,6 @@ async function submitFinalOrder() {
   }
 }
 
-// دالة لجلب وعرض الطلبات في صفحة الإدارة/الطلبات (orders.html)
 async function loadAdminOrders() {
   const tableBody = document.getElementById('ordersTableBody');
   if (!tableBody) return;
@@ -439,7 +426,6 @@ async function loadAdminOrders() {
   }
 
   tableBody.innerHTML = orders.map(ord => {
-    // تنسيق عرض المنتجات (اسم الصنف - السعر - الكمية)
     let itemsList = '';
     if (Array.isArray(ord.items)) {
       itemsList = ord.items.map(i => `• ${escapeHtml(i.name)} (${i.qty} قطعة) - ${i.price * i.qty} جنيه`).join('<br>');
@@ -465,7 +451,6 @@ async function loadAdminOrders() {
   }).join('');
 }
 
-// حذف طلب من لوحة التحكم
 async function deleteOrder(orderId) {
   if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return;
   const { error } = await _supabase.from('orders').delete().eq('id', orderId);
@@ -477,9 +462,8 @@ async function deleteOrder(orderId) {
   }
 }
 
-
 // ==========================================
-// --- 7. نظام الشات المطور ---
+// --- 7. نظام الشات المطور (مع وظائف مسح الشات والرسائل للأدمن فقط) ---
 // ==========================================
 
 async function initChatSystem() {
@@ -493,6 +477,12 @@ async function initChatSystem() {
   currentUser = user;
   const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
   if (profile) currentProfile = profile;
+
+  // إظهار زر "مسح الشات بالكامل" للأدمن الرئيسي فقط
+  const clearBtn = document.getElementById('clearChatBtn');
+  if (clearBtn && currentUser.id === ADMIN_UID) {
+    clearBtn.style.display = 'block';
+  }
 
   const isStaff = user.id === ADMIN_UID || currentProfile?.role === 'admin' || currentProfile?.role === 'moderator' || currentProfile?.role === 'technician';
 
@@ -604,6 +594,8 @@ async function loadChatMessages() {
     profiles.forEach(p => { profileMap[p.id] = p; });
   }
 
+  const isMainAdmin = currentUser && currentUser.id === ADMIN_UID;
+
   messagesContainer.innerHTML = uniqueMessages.map(m => {
     let isMe = m.sender_id === currentUser.id;
     let senderProfile = profileMap[m.sender_id] || {};
@@ -628,12 +620,19 @@ async function loadChatMessages() {
 
     const timeStr = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    // زر حذف رسالة مفردة يظهر للأدمن فقط
+    const deleteBtnHtml = isMainAdmin ? `
+      <button onclick="deleteChatMessage('${m.id}')" title="حذف الرسالة" style="background: none; border: none; color: #e63946; cursor: pointer; font-size: 12px; padding: 0 4px; margin-right: auto;">
+        🗑️
+      </button>` : '';
+
     return `
       <div class="msg ${isMe ? 'me' : 'other'}" style="display: flex; flex-direction: column;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
           <strong style="font-size: 12px; color: ${isMe ? '#eef6ff' : '#20a4ff'};">
             ${escapeHtml(displayTitle)} ${roleBadgeHtml}
           </strong>
+          ${deleteBtnHtml}
         </div>
         <div style="font-size: 14px; word-break: break-word;">${escapeHtml(m.content)}</div>
         <div style="font-size: 10px; opacity: 0.7; align-self: flex-end; margin-top: 4px;">${timeStr}</div>
@@ -642,6 +641,41 @@ async function loadChatMessages() {
   }).join('');
 
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// دالة مسح رسالة مفردة (للأدمن فقط)
+async function deleteChatMessage(messageId) {
+  if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
+  
+  const { error } = await _supabase.from('messages').delete().eq('id', messageId);
+  if (error) {
+    showToast('❌ فشل حذف الرسالة: ' + error.message);
+  } else {
+    showToast('✅ تم حذف الرسالة بنجاح');
+    loadChatMessages();
+  }
+}
+
+// دالة مسح الشات بالكامل للعميل النشط (للأدمن فقط)
+async function clearFullChat() {
+  if (!activeChatUserId) {
+    showToast('⚠️ يرجى تحديد العميل أولاً');
+    return;
+  }
+  
+  if (!confirm('⚠️ تحذير: هل أنت متأكد من مسح جميع رسائل هذه المحادثة نهائياً؟')) return;
+
+  const { error } = await _supabase
+    .from('messages')
+    .delete()
+    .or(`and(sender_id.eq.${ADMIN_UID},recipient_id.eq.${activeChatUserId}),and(sender_id.eq.${activeChatUserId},recipient_id.eq.${ADMIN_UID})`);
+
+  if (error) {
+    showToast('❌ فشل مسح الشات: ' + error.message);
+  } else {
+    showToast('✅ تم مسح الشات بالكامل بنجاح');
+    loadChatMessages();
+  }
 }
 
 async function sendChatMessage() {
@@ -1108,7 +1142,7 @@ async function deletePost(postId) {
   renderPublicPosts();
 }
 
-// --- 10. المنتجات والبحث فيها (محدث بزر "اضف للسلة") ---
+// --- 10. المنتجات والبحث فيها ---
 async function renderProducts(cat = 'all') {
   if (cat !== undefined) currentCategory = cat;
   const grid = document.getElementById('productsGrid');
