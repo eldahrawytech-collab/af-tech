@@ -8,13 +8,22 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const ADMIN_PASS = "05082026AF";
-
-    function protectPage() {
+    // حماية الصفحة والتحقق من كلمة المرور عبر قاعدة البيانات آمنياً
+    async function protectPage() {
       if (sessionStorage.getItem('admin_authenticated') === 'true') return;
       let entered = prompt('🔐 هذه الصفحة محمية خاصة بالأدمن، يرجى إدخال رمز المرور:');
       if (!entered) { window.location.href = 'index.html'; return; }
-      if (entered.trim() === ADMIN_PASS) {
+
+      // جلب كلمة المرور المخفية من قاعدة البيانات Supabase (جدول settings)
+      const SUPABASE_URL = 'https://kcwtnkibuebfzmhhzzly.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_yfEafZ_h2inFrY_F6FZABg_VA4jp2oc';
+      const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const { data, error } = await _supabase.from('settings').select('value').eq('key', 'admin_password').single();
+      
+      const adminPass = data ? data.value : '05082026AF'; // قيمة افتراضية كاحتياط
+
+      if (entered.trim() === adminPass) {
         sessionStorage.setItem('admin_authenticated', 'true');
         alert('✅ تم التحقق بنجاح');
       } else {
@@ -48,6 +57,7 @@
     .select-role { background: #0b132b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 6px; }
     .btn-ban { background-color: #e63946; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
     .btn-unban { background-color: #2a9d8f; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+    .btn-delete { background-color: #d90429; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 5px; }
     #toast { position: fixed; bottom: 20px; right: 20px; background-color: #333; color: #fff; padding: 12px 24px; border-radius: 8px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
   </style>
 </head>
@@ -65,7 +75,7 @@
   <div class="container">
     <div class="card">
       <h2>مرحباً بك يا مهندس أحمد (الأدمن)</h2>
-      <p>من هذه اللوحة يمكنك التحكم بالأعضاء، المنتجات، وإضافة أو تعديل وحذف الشروحات وملفات التحميل وبرامج الكمبيوتر وفيديوهات اليوتيوب.</p>
+      <p>من هذه اللوحة يمكنك التحكم بالأعضاء (حظر أو مسح)، المنتجات، وإضافة أو تعديل وحذف الشروحات وملفات التحميل.</p>
     </div>
 
     <!-- إدارة أعضاء الموقع -->
@@ -89,7 +99,7 @@
       </div>
     </div>
 
-    <!-- نموذج إضافة أو تعديل منتج (تمت إضافة جميع الأقسام لتطابق صفحة المنتجات) -->
+    <!-- نموذج إضافة أو تعديل منتج -->
     <div class="card">
       <h3 id="productFormTitle">➕ إضافة منتج جديد</h3>
       <input type="hidden" id="editProductId">
@@ -142,10 +152,10 @@
     <div class="card">
       <h3 id="explanationFormTitle">💡 إضافة شرح أو ملف / برنامج جديد</h3>
       <input type="hidden" id="editExplanationId">
-      <input type="text" id="eTitle" placeholder="عنوان الشرح أو البرنامج (مثال: أحدث ملف قنوات نايل سات أو برنامج تفعيل)">
+      <input type="text" id="eTitle" placeholder="عنوان الشرح أو البرنامج">
       <textarea id="eDesc" placeholder="تفاصيل الشرح أو تعليمات الاستخدام..."></textarea>
-      <input type="text" id="eYoutubeUrl" placeholder="رابط فيديو يوتيوب (مثال: https://www.youtube.com/watch?v=...)">
-      <input type="text" id="eFileUrl" placeholder="رابط تحميل الملف أو البرنامج (مثل رابط مباشر، ميديافاير، أو ملف قنوات)">
+      <input type="text" id="eYoutubeUrl" placeholder="رابط فيديو يوتيوب">
+      <input type="text" id="eFileUrl" placeholder="رابط تحميل الملف أو البرنامج">
       <label style="font-size:13px; color:#a0aec0;">أو إرفاق صورة مصغرة للشرح:</label>
       <input type="file" id="eImageFile" accept="image/*">
       <br><br>
