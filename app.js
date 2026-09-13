@@ -1362,19 +1362,11 @@ async function loadPublicAds() {
 
 // 2. نافذة التواصل عند الضغط على الإعلان
 function handleAdClick(title, phone, link) {
-  const displayArea = document.getElementById('contact-display-area');
-  
-  if (displayArea) {
-    displayArea.innerHTML = `
-      <div class="contact-box">
-        <h4>${title}</h4>
-        <p>رقم الهاتف: <a href="tel:${phone}">${phone}</a></p>
-        ${link && link.trim() !== '' ? `<a href="${link}" target="_blank">رابط الإعلان</a>` : ''}
-      </div>
-    `;
+  // إذا لم يتم إدخال رقم تليفون أو لينك، لا تظهر نافذة التواصل وتكتفي بتوجيهه لو في لينك
+  if (!phone && !link) {
+    showToast(`📢 ${title}`);
+    return;
   }
-}
-
 
   if (link && link.trim() !== '') {
     // لو فيه لينك، ممكن تفتحه أو تعرض خيارات التواصل
