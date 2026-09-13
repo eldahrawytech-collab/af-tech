@@ -18,6 +18,7 @@ let cart = JSON.parse(localStorage.getItem('af_cart')) || [];
 document.addEventListener('DOMContentLoaded', () => {
   checkUser();
   updateCartUI();
+  loadPublicAds();
   
   document.querySelectorAll('.filter').forEach(btn => {
     btn.onclick = () => {
@@ -1318,6 +1319,7 @@ async function loadAdminData() {
   await loadAdminUsers();
   await loadAdminProducts();
   await loadAdminExplanations();
+  await loadAdminAds();
 }
 
 function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])); }
