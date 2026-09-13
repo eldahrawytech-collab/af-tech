@@ -1330,3 +1330,173 @@ function showToast(t) {
   clearTimeout(window.tt);
   window.tt = setTimeout(() => (x.style.display = 'none'), 3000);
 }
+// --- دوال نظام الإعلانات المتحركة ---
+
+// 1. جلب وعرض الإعلانات في الصفحة الرئيسية بشكل متحرك وسلس
+async function loadPublicAds() {
+  const container = document.getElementById('adsTickerContainer');
+  const track = document.getElementById('adsTrack');
+  if (!container || !track) return;
+
+  const { data: ads, error } = await _supabase.from('ads').select('*').order('created_at', { ascending: false });
+
+  if (error || !ads || ads.length === 0) {
+    container.style.display = 'none'; // لو مفيش أي إعلانات متظهرش للصفحة نهائياً
+    return;
+  }
+
+  container.style.display = 'block';
+
+  // تكرار العناصر مرتين لعمل حركة سلسة ومتواصلة (Infinite Loop)
+  const adsHtml = ads.map(ad => `
+    <div class="ad-badge-card" onclick="handleAdClick('${escapeHtml(ad.title)}', '${escapeHtml(ad.phone || '')}', '${escapeHtml(ad.link_url || '')}')">
+      ${ad.image_url ? `<img src="${ad.image_url}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : '📢'}
+      <span style="font-weight: bold; font-size: 14px;">${escapeHtml(ad.title)}</span>
+    </div>
+  `).join('');
+
+  track.innerHTML = adsHtml + adsHtml; // تكرار لمضاعفة الشريط وتحقيق السلاسة
+}
+
+// 2. نافذة التواصل عند الضغط على الإعلان
+function handleAdClick(title, phone, link) {
+  // إذا لم يتم إدخال رقم تليفون أو لينك، لا تظهر نافذة التواصل وتكتفي بتوجيهه لو في لينك
+  if (!phone && !link) {
+    showToast(`📢 ${title}`);
+    return;
+  }
+
+  if (link && link.trim() !== '') {
+    // لو فيه لينك، ممكن تفتحه أو تعرض خيارات التواصل
+    window.open(link, '_blank');
+  }
+
+  if (phone && phone.trim() !== '') {
+    showAdContactModal(title, phone);
+  }
+}
+
+function showAdContactModal(title, phone) {
+  let existing = document.getElementById('adContactModal');
+  if (existing) existing.remove();
+
+  const modalHtml = `
+    <div class="cart-modal" id="adContactModal" style="display: flex;">
+      <div class="cart-content" style="max-width: 350px; text-align: center;">
+        <div class="cart-header" style="justify-content: center; position: relative;">
+          <h3 style="margin:0; font-size:16px; color:#20a4ff;">📞 تواصل مع صاحب الإعلان</h3>
+          <button class="close-modal" onclick="document.getElementById('adContactModal').remove()" style="position: absolute; left: 0;">✕</button>
+        </div>
+        <div style="padding: 15px 0;">
+          <p style="font-weight: bold; font-size: 15px; margin-bottom: 10px;">${escapeHtml(title)}</p>
+          <p style="color: #42d6a0; font-size: 16px; margin-bottom: 15px;">رقم التليفون: <strong>${escapeHtml(phone)}</strong></p>
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <a href="tel:${phone}" class="btn primary" style="padding: 8px 15px; text-decoration: none; font-size: 14px;">📞 اتصال مباشر</a>
+            <a href="https://wa.me/${phone.startsWith('0') ? '2' + phone : phone}" target="_blank" class="btn ghost" style="padding: 8px 15px; text-decoration: none; font-size: 14px; background: #25d366; color: #fff; border: none;">💬 واتساب</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// 3. حفظ أو تعديل إعلان من لوحة التحكم
+async function saveAdvertisement() {
+  const editId = document.getElementById('editAdId').value;
+  const title = document.getElementById('adTitle').value.trim();
+  const phone = document.getElementById('adPhone').value.trim();
+  const linkUrl = document.getElementById('adLink').value.trim();
+  const fileInput = document.getElementById('adImageFile');
+
+  if (!title) {
+    showToast('⚠️ يرجى إدخال عنوان الإعلان');
+    return;
+  }
+
+  let imageUrl = null;
+  if (fileInput && fileInput.files && fileInput.files.length > 0) {
+    showToast('⏳ جاري رفع صورة الإعلان...');
+    imageUrl = await uploadImage(fileInput.files[0]);
+  }
+
+  const payload = { title, phone, link_url: linkUrl };
+  if (imageUrl) payload.image_url = imageUrl;
+
+  if (editId) {
+    const { error } = await _supabase.from('ads').update(payload).eq('id', editId);
+    if (error) {
+      showToast('❌ خطأ في التعديل: ' + error.message);
+    } else {
+      showToast('✅ تم تعديل الإعلان بنجاح');
+      resetAdForm();
+      loadAdminAds();
+    }
+  } else {
+    const { error } = await _supabase.from('ads').insert([payload]);
+    if (error) {
+      showToast('❌ خطأ في الإضافة: ' + error.message);
+    } else {
+      showToast('✅ تم إضافة الإعلان بنجاح');
+      resetAdForm();
+      loadAdminAds();
+    }
+  }
+}
+
+// 4. جلب الإعلانات في لوحة التحكم (Admin)
+async function loadAdminAds() {
+  const list = document.getElementById('adminAdsList');
+  if (!list) return;
+
+  const { data: ads } = await _supabase.from('ads').select('*').order('created_at', { ascending: false });
+
+  if (!ads || ads.length === 0) {
+    list.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#8fa7ba;">لا توجد إعلانات مضافة حالياً.</td></tr>';
+    return;
+  }
+
+  list.innerHTML = ads.map(ad => `
+    <tr>
+      <td>${ad.image_url ? `<img src="${ad.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:6px;">` : '📢'}</td>
+      <td><strong>${escapeHtml(ad.title)}</strong></td>
+      <td>${escapeHtml(ad.phone || 'غير مدخل')}</td>
+      <td>${ad.link_url ? `<a href="${ad.link_url}" target="_blank" style="color:#20a4ff;">🔗 رابط</a>` : 'لا يوجد'}</td>
+      <td>
+        <button onclick="editAd('${ad.id}', '${escapeHtml(ad.title)}', '${escapeHtml(ad.phone || '')}', '${escapeHtml(ad.link_url || '')}')" style="background:#168fe0; color:#fff; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">✏️ تعديل</button>
+        <button onclick="deleteAd('${ad.id}')" style="background:#e63946; color:#fff; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">🗑️ حذف</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function editAd(id, title, phone, linkUrl) {
+  document.getElementById('editAdId').value = id;
+  document.getElementById('adTitle').value = title;
+  document.getElementById('adPhone').value = phone;
+  document.getElementById('adLink').value = linkUrl;
+  document.getElementById('adFormTitle').innerText = '✏️ تعديل الإعلان';
+  document.getElementById('cancelAdEditBtn').style.display = 'inline-block';
+}
+
+function resetAdForm() {
+  document.getElementById('editAdId').value = '';
+  document.getElementById('adTitle').value = '';
+  document.getElementById('adPhone').value = '';
+  document.getElementById('adLink').value = '';
+  document.getElementById('adImageFile').value = '';
+  document.getElementById('adFormTitle').innerText = '📢 إضافة إعلان متحرك جديد';
+  document.getElementById('cancelAdEditBtn').style.display = 'none';
+}
+
+async function deleteAd(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
+  const { error } = await _supabase.from('ads').delete().eq('id', id);
+  if (error) {
+    showToast('❌ خطأ في الحذف');
+  } else {
+    showToast('✅ تم حذف الإعلان بنجاح');
+    loadAdminAds();
+  }
+}
+
