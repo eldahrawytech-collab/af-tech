@@ -1361,17 +1361,25 @@ async function loadPublicAds() {
 }
 
 // 2. نافذة التواصل عند الضغط على الإعلان
+// تحديث دالة الضغط لتظهر البيانات في خانة العرض المحددة للمستخدم
 function handleAdClick(title, phone, link) {
-  // إذا لم يتم إدخال رقم تليفون أو لينك، لا تظهر نافذة التواصل وتكتفي بتوجيهه لو في لينك
-  if (!phone && !link) {
-    showToast(`📢 ${title}`);
-    return;
+  const displayArea = document.getElementById('contact-display-area');
+  
+  if (displayArea) {
+    displayArea.innerHTML = `
+      <div class="contact-box">
+        <h4>${title}</h4>
+        <p>رقم الهاتف: <a href="tel:${phone}">${phone}</a></p>
+        ${link ? `<a href="${link}" target="_blank">رابط الإعلان</a>` : ''}
+      </div>
+    `;
   }
-
+  
   if (link && link.trim() !== '') {
-    // لو فيه لينك، ممكن تفتحه أو تعرض خيارات التواصل
     window.open(link, '_blank');
   }
+}
+
 
   if (phone && phone.trim() !== '') {
     showAdContactModal(title, phone);
