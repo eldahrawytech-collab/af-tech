@@ -205,71 +205,46 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
-
-  /* حاوية الشريط الرئيسية */
   #adsTickerContainer {
-    width: 100% !important;
+    padding: 18px 0 !important; /* زيادة ارتفاع الشريط العلوي */
     background: linear-gradient(90deg, #0b192c, #1e3a5f);
-    padding: 10px 0;
-    border-bottom: 2px solid #20a4ff;
-    border-top: 1px solid rgba(32, 164, 255, 0.2);
-    overflow: hidden;
-    white-space: nowrap;
-    position: relative;
-    display: block !important; /* ضمان الظهور الإجباري على الموبايل والديسك توب */
-    box-sizing: border-box;
-    z-index: 10;
+    border-bottom: 3px solid #20a4ff !important;
   }
-
   #adsTickerContainer:hover #adsTrack {
     animation-play-state: paused;
   }
-
-  /* المسار المتحرك */
-  #adsTrack {
-    display: inline-flex;
-    gap: 15px;
-    align-items: center;
-    animation: scrollAds 22s linear infinite;
-    width: max-content;
-  }
-
-  /* كارت الإعلان الفردي */
   .ad-badge-card {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(5, 12, 20, 0.9);
-    border: 1px solid rgba(32, 164, 255, 0.4);
-    padding: 6px 14px;
-    border-radius: 50px;
+    gap: 18px;
+    background: rgba(5, 12, 20, 0.95);
+    border: 2px solid rgba(32, 164, 255, 0.5) !important;
+    padding: 14px 28px !important; /* تكبير حشو الإعلان ليكون أكبر حجماً */
+    border-radius: 16px !important; /* تقويس عصرى ومريح */
     color: #fff;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    white-space: nowrap;
-    font-size: 13px;
-    flex-shrink: 0;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    transition: transform 0.2s, border-color 0.2s;
   }
-
   .ad-badge-card:hover {
+    transform: scale(1.05);
     border-color: #20a4ff;
+    box-shadow: 0 8px 25px rgba(32, 164, 255, 0.3);
   }
-
-  /* تعديلات وتجاوب الشاشات الصغيرة للموبايل */
-  @media (max-width: 768px) {
-    #adsTickerContainer {
-      padding: 8px 0;
-    }
-    #adsTrack {
-      animation: scrollAds 16s linear infinite; /* سرعة مناسبة للموبايل */
-      gap: 12px;
-    }
-    .ad-badge-card {
-      padding: 5px 12px;
-      font-size: 12px;
-    }
+  /* تكبير الأيقونة أو الصورة داخل الإعلان */
+  .ad-badge-card img, .ad-badge-card span:first-child {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 26px !important;
+  }
+  /* تكبير خط نص الإعلان */
+  .ad-badge-card span {
+    font-size: 18px !important; /* حجم خط كبير وواضح للعين */
+    font-weight: bold;
+    letter-spacing: 0.5px;
   }
 </style>
+
 
 
 
